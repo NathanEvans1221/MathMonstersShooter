@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
 
@@ -9,6 +10,19 @@ const props = defineProps({
 
 const emit = defineEmits(['pause'])
 const { t, locale } = useI18n()
+const isMuted = ref(false)
+
+// Use global access or emit event? Since logic is in different places, 
+// let's assume we can control managers directly or emit.
+// Ideally, App.vue controls global state, but managers are static-ish.
+// Let's import managers here for simple toggling.
+import { SoundManager } from '../logic/SoundManager.js'
+
+const toggleMute = () => {
+    isMuted.value = !isMuted.value;
+    SoundManager.setMuted(isMuted.value);
+    TTSManager.setEnabled(!isMuted.value);
+}
 
 const onPauseClick = () => {
     TTSManager.speak(t('paused'), locale.value)
@@ -18,7 +32,13 @@ const onPauseClick = () => {
 
 <template>
   <div class="hud">
-    <div class="score">{{ $t('score') }} <span class="val">{{ score }}</span></div>
+    <div class="score-row">
+        <div class="score">{{ $t('score') }} <span class="val">{{ score }}</span></div>
+        <button class="mute-btn" @click="toggleMute">
+            {{ isMuted ? '🔇' : '🔊' }}
+        </button>
+    </div>
+    
     <div class="lives-container">
         <button class="pause-btn" @click="onPauseClick">⏸</button>
         <div class="lives">
@@ -40,6 +60,22 @@ const onPauseClick = () => {
   pointer-events: none;
   z-index: 5;
   gap: 5px;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 15px; 
+  pointer-events: auto;
+}
+
+.mute-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 5px;
 }
 
 .score {

@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "deploy": "npm run build && npx wrangler deploy --assets=./dist"
+    "preview": "vite preview"
   },
   "dependencies": {
     "vue": "^3.5.24",

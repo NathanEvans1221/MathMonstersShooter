@@ -1,6 +1,13 @@
 export class TTSManager {
+    static enabled = true;
+
+    static setEnabled(val) {
+        this.enabled = val;
+        if (!val) window.speechSynthesis.cancel();
+    }
+
     static speak(text, locale) {
-        if (!window.speechSynthesis) return;
+        if (!this.enabled || !window.speechSynthesis) return;
 
         // Cancel previous speech to prevent overlapping
         window.speechSynthesis.cancel();
