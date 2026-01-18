@@ -78,6 +78,7 @@ const onWrong = () => {
         TTSManager.speak(enPhrases[idx > -1 ? idx : 0], 'en');
     }
 
+    const el = document.getElementById('app-container');
     if(el) {
         el.classList.add('shake')
         setTimeout(() => el.classList.remove('shake'), 300)
