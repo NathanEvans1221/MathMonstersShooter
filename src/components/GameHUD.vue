@@ -19,26 +19,31 @@ defineProps({
 .hud {
   position: absolute;
   top: 20px;
-  left: 20px;
-  right: 20px;
+  width: 100%;
   display: flex;
-  justify-content: space-between;
-  font-size: 1.5rem;
-  font-weight: bold;
+  flex-direction: column;
+  align-items: center;
   pointer-events: none;
   z-index: 5;
+  gap: 5px;
+}
+
+.score {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  /* No absolute positioning needed anymore */
+}
+
+.lives {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff3366;
+  /* No absolute positioning needed anymore */
 }
 
 .val {
   color: #fff;
-}
-
-.score {
-  color: var(--primary-color);
-}
-
-.lives {
-  color: #ff3366;
 }
 
 .heart {

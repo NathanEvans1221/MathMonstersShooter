@@ -122,17 +122,37 @@ export class GameEngine {
         this.spawnTimer += dt;
         const currentCount = this.entityManager.monsters.length;
 
-        // Force spawn if less than 3
+        // Check vertical spacing (Avoid crowding)
+        // Find the highest monster (smallest y) to ensure gap
+        let highestY = Infinity;
+        for (let m of this.entityManager.monsters) {
+            if (m.alive && m.y < highestY) highestY = m.y;
+        }
+
+        // Monster radius is ~40. Diameter ~80. 
+        // Base gap ~200.
+        // Rule: Reduce gap by 1/10 for every 10 kills (every level).
+        // Formula: 200 * (0.9 ^ (level - 1))
+        // Hard limit: 90 (slightly more than diameter to prevent overlap)
+        const baseGap = 200;
+        const dynamicGap = baseGap * Math.pow(0.9, this.level - 1);
+        const minGap = Math.max(90, dynamicGap);
+
+        const canSpawn = (highestY === Infinity) || (highestY > (-50 + minGap));
+
+        // Force spawn if less than 3 (and space allows)
         if (currentCount < 3 && this.spawnTimer > 500) {
-            this.spawnMonster();
-            this.spawnTimer = 0;
+            if (canSpawn) {
+                this.spawnMonster();
+                this.spawnTimer = 0;
+            }
         }
         // Normal spawn interval up to 5 max
         else if (this.spawnTimer > this.spawnInterval) {
-            if (currentCount < 5) {
+            if (currentCount < 5 && canSpawn) {
                 this.spawnMonster();
+                this.spawnTimer = 0;
             }
-            this.spawnTimer = 0;
         }
 
         // 3. Update Entities 
