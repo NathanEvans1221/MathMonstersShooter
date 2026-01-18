@@ -16,6 +16,7 @@ export class GameEngine {
         this.height = canvas.height;
 
         this.state = 'idle';
+        this.targetMonster = null; // Track current target
         this.lastTime = 0;
         this.spawnTimer = 0;
         this.spawnInterval = 2500;
@@ -120,8 +121,12 @@ export class GameEngine {
     getClosestMonster() {
         let lowest = null;
         let maxY = -Infinity;
+        const playerY = this.entityManager.player.y;
+
         for (let m of this.entityManager.monsters) {
-            if (m.y > maxY && m.alive) {
+            // Ignore monsters that are already overlapping or past the player (too close to shoot)
+            // Buffer of 60px (approx monster radius + player radius)
+            if (m.y > maxY && m.alive && m.y < (playerY - 60 * this.scaleFactor)) {
                 maxY = m.y;
                 lowest = m;
             }
@@ -262,9 +267,9 @@ export class GameEngine {
     }
 
     updateOptions() {
-        const closest = this.getClosestMonster();
-        if (closest) {
-            this.callbacks.onOptions(closest.options);
+        this.targetMonster = this.getClosestMonster();
+        if (this.targetMonster) {
+            this.callbacks.onOptions(this.targetMonster.options);
         } else {
             this.callbacks.onOptions([]);
         }
@@ -387,6 +392,19 @@ export class GameEngine {
 
                 this.ctx.fillStyle = '#4A4A4A'; // Dark text
                 this.ctx.fillText(m.equation, m.x, m.y);
+            }
+
+            // Draw Targeting Indicator (Red Underline)
+            if (m === this.targetMonster) {
+                const textW = this.ctx.measureText(m.equation).width;
+                const lineY = m.y + (fs * 0.6); // Slightly below center
+
+                this.ctx.strokeStyle = '#FF3366'; // Red
+                this.ctx.lineWidth = 4;
+                this.ctx.beginPath();
+                this.ctx.moveTo(m.x - textW / 2, lineY);
+                this.ctx.lineTo(m.x + textW / 2, lineY);
+                this.ctx.stroke();
             }
         }
 

@@ -35,18 +35,18 @@ const toggleLang = () => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 1.7rem; /* Increased from 1.5rem to 3rem */
+  padding: 1.5rem; /* Reduced padding */
   text-align: center;
   border-radius: 20px;
   border: 2px solid var(--primary-color);
   background: rgba(18, 18, 18, 0.95);
   z-index: 10;
-  width: 90%;
-  max-width: 500px; /* Limit width */
+  width: 85%; /* Slightly smaller width */
+  max-width: 400px; /* Reduced max-width */
 }
 
 h1 {
-  font-size: 2.2rem; /* Increased from 2rem */
+  font-size: 1.8rem; /* Reduced font size */
   margin: 0;
   color: var(--primary-color);
   letter-spacing: 2px;
