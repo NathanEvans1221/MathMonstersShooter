@@ -2,19 +2,31 @@
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
 
-defineEmits(['start'])
+/**
+ * 遊戲起始畫面組件
+ * 提供標題、語言切換、以及開始遊戲的入口點
+ */
+defineEmits(['start']) // 發送開始遊戲事件
 const { locale, t } = useI18n()
-const version = __APP_VERSION__
+const version = __APP_VERSION__ // 從 Vite 配置中注入的應用程式版本號
 
+/**
+ * 調用語音合成播放文字
+ * @param {string} text - 要播放的內容
+ */
 const speak = (text) => {
     TTSManager.speak(text, locale.value)
 }
 
+/**
+ * 切換當前語系 (中/英) 並語音提示
+ */
 const toggleLang = () => {
     locale.value = locale.value === 'zh' ? 'en' : 'zh';
     speak(locale.value === 'zh' ? '切換為中文' : 'Switched to English');
 }
 </script>
+
 
 <template>
   <div class="start-screen glass">

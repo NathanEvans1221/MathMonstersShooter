@@ -11,21 +11,26 @@
 - **State Management**: Vue Reactivity API
 
 ## 🏗 模組架構 (Architecture)
-```
-src/
-├── assets/          # 靜態資源 (Images, Sounds)
-├── logic/           # 純 JS 遊戲核心
-│   ├── GameEngine.js    # 遊戲主循環 (Loop) & 狀態管理
-│   ├── EntityManager.js # 實體管理 (Player, Monsters, Bullets)
-│   ├── MathSystem.js    # 數學題目生成與驗證
-│   └── Collision.js     # 碰撞偵測系統
-├── components/      # Vue UI 組件
-│   ├── GameCanvas.vue   # 遊戲畫面渲染層
-│   ├── GameHUD.vue      # 抬頭顯示器 (Score, HTML Overlay)
-│   ├── AnswerPanel.vue  # 互動控制板
-│   └── StartScreen.vue  # 遊戲入口
-└── App.vue          # 主容器
-```
+
+### 核心邏輯 (src/logic/)
+- **GameEngine.js**: 遊戲核心驅動器。負責 Canvas 的渲染循環 (RequestAnimationFrame)、遊戲狀態切換 (開始、暫停、勝負判定) 以及各個子系統的協調。
+- **EntityManager.js**: 實體管理器。維護遊戲中所有的動態物件，包括玩家飛船、數學怪物、子彈及爆炸粒子，並處理它們的移動與生命週期。
+- **MathSystem.js**: 數學題目生成器。負責產生 0-20 範圍內的隨機加減法算式，並生成包含正確答案與干擾項的選項陣列。
+- **Collision.js**: 碰撞偵測系統。提供圓形與圓形、點與圓形之間相互碰撞的幾何運算邏輯。
+- **SoundManager.js**: 音效管理器。利用 Web Audio API 即時合成音效（如射擊聲、爆炸聲、BGM），無需加載外部音檔，確保輕量。
+- **TTSManager.js**: 語音合成管理器。調用瀏覽器原生 Speech Synthesis 將介面文字與題目數字轉為語音，輔助兒童聽覺學習。
+
+### 應用程式入口與配置 (src/)
+- **main.js**: 應用程式入口點。初始化 Vue 實例並掛載 i18n。
+- **i18n.js**: 國際化語系配置。定義中英文介面翻譯及語言切換邏輯。
+
+### UI 組件 (src/components/)
+- **GameCanvas.vue**: 渲染層。將 `GameEngine` 的繪圖輸出顯示在 Canvas 畫布上。
+- **GameHUD.vue**: 資訊顯示層。疊加在遊戲上方的 HTML UI，顯示分數、生命值與功能按鈕。
+- **AnswerPanel.vue**: 互動操作區。動態生成算式答案選項按鈕，並處理玩家的觸控與點擊。
+- **StartScreen.vue**: 遊戲起始與結算畫面。處理任務開始、過關提示與失敗重試。
+
+
 
 ## 🎨 視覺風格 (Visual Aesthetics)
 - **Theme**: Neon Space (霓虹太空)

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameCanvas from './components/GameCanvas.vue'
 import GameHUD from './components/GameHUD.vue'
@@ -9,29 +9,39 @@ import { TTSManager } from './logic/TTSManager.js'
 import { SoundManager } from './logic/SoundManager.js'
 
 const { t, locale } = useI18n()
-const gameState = ref('start') // start, playing, gameover
-const score = ref(0)
-const lives = ref(3)
-const currentOptions = ref([])
-const gameCanvas = ref(null)
 
+// --- 響應式狀態 ---
+const gameState = ref('start') // 遊戲狀態：start (初始), playing (進行中), paused (暫停), gameover (結算)
+const score = ref(0) // 當前分數
+const lives = ref(3) // 剩餘生命
+const currentOptions = ref([]) // 當前顯示的答案選項
+const gameCanvas = ref(null) // 對 GameCanvas 組件的引用
+const isWin = ref(false) // 是否為勝利通關狀態
+
+/**
+ * 調用 TTS 播放多國語言文字
+ * @param {string} key - i18n 的關鍵字
+ */
 const speak = (key) => {
     TTSManager.speak(t(key), locale.value)
 }
 
+/**
+ * 開始或重新開始遊戲
+ */
 const startGame = () => {
     gameState.value = 'playing'
     score.value = 0
     lives.value = 3
     currentOptions.value = []
     
-    // Explicitly restart game logic
+    // 延遲一點點確保 DOM 已渲染，然後重置遊戲引擎
     setTimeout(() => {
         if(gameCanvas.value) gameCanvas.value.restartGame()
     }, 50)
 }
 
-// ... (keep existing methods)
+// --- 事件處理常式 ---
 
 const onStartClick = () => {
     speak('start')
@@ -43,14 +53,17 @@ const onResumeClick = () => {
     resumeGame()
 }
 
+/**
+ * 處理「離開遊戲」回到主畫面
+ */
 const onExitClick = () => {
     speak('exit')
     gameState.value = 'start'
     
-    // Explicitly stop BGM state (which might be "paused" from game) so we can restart it fresh
+    // 停止當前背景音樂並重置，確保下次重新開始時音樂正確
     SoundManager.stopBGM()
     
-    // Ensure BGM plays on Start Screen
+    // 返回主畫面後恢復播放背景音樂
     setTimeout(() => {
         SoundManager.playBGM()
     }, 100)
@@ -61,54 +74,61 @@ const onRetryClick = () => {
     startGame()
 }
 
-// Global click handler to try starting BGM if blocked (browser policy)
+/**
+ * 全局點擊監聽：用於繞過瀏覽器對自動播放音訊的限制
+ * 當使用者發生任何點擊行為時，嘗試初始化並啟動音訊背景音樂
+ */
 const handleInteraction = () => {
-    // Check if SoundManager is available (in case of HMR race)
     if (typeof SoundManager === 'undefined') return;
     
     SoundManager.init();
     if (SoundManager.ctx && SoundManager.ctx.state === 'suspended' && !SoundManager.muted) {
         SoundManager.ctx.resume();
     }
-    // Only play BGM if in Start or Playing state (Game Over stops it)
+    // 僅在開始畫面或遊戲進行中播放音樂 (遊戲結束時會停止)
     if (gameState.value === 'start' || gameState.value === 'playing') {
         SoundManager.playBGM();
     }
 }
 
-// Add event listener on mount
-import { onMounted, onUnmounted } from 'vue'
+// 組件掛載與卸載時管理事件監聽
 onMounted(() => {
     document.addEventListener('click', handleInteraction);
-    // Do not auto-play BGM to avoid "AudioContext was not allowed to start" warning.
-    // BGM will start on first user interaction via handleInteraction.
 })
 
 onUnmounted(() => {
     document.removeEventListener('click', handleInteraction);
 })
 
-
-// ... 
-
-const isWin = ref(false)
+// --- 來自 GameCanvas 的回調事件 ---
 
 const onScore = (val) => score.value = val
 const onLives = (val) => lives.value = val
 const onOptions = (opts) => currentOptions.value = opts
+
+/**
+ * 處理遊戲結束或勝利
+ * @param {number} finalScore - 最終分數
+ * @param {boolean} winStatus - 是否勝利
+ */
 const onGameOver = (finalScore, winStatus = false) => {
     score.value = finalScore
     isWin.value = winStatus
     gameState.value = 'gameover'
     
+    // 語音宣告結果
     if (winStatus) {
         TTSManager.speak(t('you_win'), locale.value)
     } else {
         TTSManager.speak(t('game_over'), locale.value)
     }
 }
+
+/**
+ * 答錯時的處理：播放隨機鼓勵語句並觸發畫面震動
+ */
 const onWrong = () => {
-    // Random wrong phrases
+    // 隨機失敗鼓勵語句
     const phrases = ['差一點', '錯了', '不對唷', '唉', '怎麼可能'];
     const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
 
@@ -120,6 +140,7 @@ const onWrong = () => {
         TTSManager.speak(enPhrases[idx > -1 ? idx : 0], 'en');
     }
 
+    // 觸發畫面整體的震動特效
     const el = document.getElementById('app-container');
     if(el) {
         el.classList.add('shake')
@@ -127,23 +148,26 @@ const onWrong = () => {
     }
 }
 
+/**
+ * 答對時的處理：播放隨機讚美語句
+ */
 const onCorrect = () => {
-    // Random praise phrases
+    // 隨機讚美語句
     const praises = ['好棒', '讚', '真厲害', '完美', '一百分'];
     const randomPraise = praises[Math.floor(Math.random() * praises.length)];
-    // Only speak praise if locale is Chinese, or maybe translate them for EN?
-    // Requirement said: "好棒、讚、真厲害、完美、一百分" which are Chinese.
-    // If EN, we could use equivalents or just skip. Let's use English equivalents if EN.
+    
     if (locale.value === 'zh') {
         TTSManager.speak(randomPraise, 'zh');
     } else {
         const enPraises = ['Great!', 'Good job!', 'Awesome!', 'Perfect!', 'One hundred percent!'];
-        // Map indices broadly
         const idx = praises.indexOf(randomPraise);
         TTSManager.speak(enPraises[idx > -1 ? idx : 0], 'en');
     }
 }
 
+/**
+ * 處理玩家選取答案後的發信給 Canvas 引擎
+ */
 const handleAnswer = (val) => {
     if (gameCanvas.value) {
         gameCanvas.value.handleAnswer(val)
@@ -160,6 +184,7 @@ const resumeGame = () => {
     if(gameCanvas.value) gameCanvas.value.setPaused(false);
 }
 </script>
+
 
 <template>
   <div id="app-container">

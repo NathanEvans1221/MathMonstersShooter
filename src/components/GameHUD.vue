@@ -2,33 +2,39 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
-
-const props = defineProps({
-  score: Number,
-  lives: Number
-})
-
-const emit = defineEmits(['pause'])
-const { t, locale } = useI18n()
-const isMuted = ref(false)
-
-// Use global access or emit event? Since logic is in different places, 
-// let's assume we can control managers directly or emit.
-// Ideally, App.vue controls global state, but managers are static-ish.
-// Let's import managers here for simple toggling.
 import { SoundManager } from '../logic/SoundManager.js'
 
+/**
+ * 遊戲抬頭顯示器 (HUD)
+ * 負責在遊戲畫面上方疊加 UI，顯示分數、生命值、靜音與暫停按鈕
+ */
+const props = defineProps({
+  score: Number, // 當前分數
+  lives: Number  // 剩餘生命
+})
+
+const emit = defineEmits(['pause']) // 發送暫停事件
+const { t, locale } = useI18n()
+const isMuted = ref(false) // 靜音狀態旗標
+
+/**
+ * 切換靜音狀態 (同步控制 BGM 與 TTS)
+ */
 const toggleMute = () => {
     isMuted.value = !isMuted.value;
     SoundManager.setMuted(isMuted.value);
     TTSManager.setEnabled(!isMuted.value);
 }
 
+/**
+ * 處理暫停按鈕點擊
+ */
 const onPauseClick = () => {
     TTSManager.speak(t('paused'), locale.value)
     emit('pause')
 }
 </script>
+
 
 <template>
   <div class="hud">

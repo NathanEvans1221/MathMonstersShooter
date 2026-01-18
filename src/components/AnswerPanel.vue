@@ -2,21 +2,33 @@
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
 
+/**
+ * 答案按鈕面板組件
+ * 負責顯示當前目標怪物的多個答案選項，並處理點擊選取
+ */
 defineProps({
   options: {
-    type: Array,
+    type: Array, // 答案選項陣列
     default: () => []
   }
 })
-const emit = defineEmits(['answer'])
+
+const emit = defineEmits(['answer']) // 發送答案選取事件
 const { locale } = useI18n()
 
+/**
+ * 處理玩家點擊選項按鈕
+ * @param {number} opt - 選取的答案數值
+ */
 const onAnswerClick = (opt) => {
-    // Speak the number (or text)
+    // 點擊時同步使用語音報數 (幫助聽覺記憶)
     TTSManager.speak(opt.toString(), locale.value)
+    
+    // 通知父組件進行後續邏輯 (如判斷是否正確、開火等)
     emit('answer', opt)
 }
 </script>
+
 
 <template>
   <div class="answer-panel">
