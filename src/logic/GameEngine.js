@@ -19,6 +19,7 @@ export class GameEngine {
         this.lastTime = 0;
         this.spawnTimer = 0;
         this.spawnInterval = 2500;
+        this.slowDownTimer = 0;
 
         this.score = 0;
         this.lives = 3;
@@ -101,6 +102,7 @@ export class GameEngine {
             );
         } else {
             SoundManager.wrong();
+            this.slowDownTimer = 1000; // Slow down for 1 second
             this.callbacks.onWrongAnswer && this.callbacks.onWrongAnswer();
         }
     }
@@ -120,7 +122,11 @@ export class GameEngine {
     loop(timestamp) {
         if (this.state !== 'playing') return;
         if (this.paused) return; // Stop loop if paused
-        const dt = timestamp - this.lastTime;
+
+        let dt = timestamp - this.lastTime;
+        // Fix for negative dt (if performance.now > rAF timestamp)
+        if (dt < 0) dt = 0;
+
         const safeDt = Math.min(dt, 50);
         this.lastTime = timestamp;
 
@@ -184,7 +190,14 @@ export class GameEngine {
         // 3. Update Entities 
         const speedFactor = dt / 16.66;
 
-        const escapedCount = this.entityManager.update(speedFactor, this.width, this.height);
+        // Handle slow down effect
+        let globalSpeedMultiplier = 1;
+        if (this.slowDownTimer > 0) {
+            this.slowDownTimer -= dt;
+            globalSpeedMultiplier = 0.5; // Slow down by half
+        }
+
+        const escapedCount = this.entityManager.update(speedFactor, this.width, this.height, globalSpeedMultiplier);
 
         if (escapedCount && escapedCount > 0) {
             for (let i = 0; i < escapedCount; i++) {
@@ -318,11 +331,12 @@ export class GameEngine {
 
             // Draw Monster Body (Circle)
             this.ctx.beginPath();
-            this.ctx.arc(m.x, m.y, m.radius * m.scale * this.scaleFactor, 0, Math.PI * 2);
+            const bodyR = Math.max(0, m.radius * m.scale * this.scaleFactor);
+            this.ctx.arc(m.x, m.y, bodyR, 0, Math.PI * 2);
             this.ctx.fill();
 
             // Draw Ears (Cute Bear Style)
-            const r = m.radius * m.scale * this.scaleFactor; // Apply scaleFactor
+            const r = Math.max(0, m.radius * m.scale * this.scaleFactor); // Apply scaleFactor
             this.ctx.beginPath();
             this.ctx.arc(m.x - r * 0.7, m.y - r * 0.7, r * 0.4, 0, Math.PI * 2); // Left ear
             this.ctx.arc(m.x + r * 0.7, m.y - r * 0.7, r * 0.4, 0, Math.PI * 2); // Right ear

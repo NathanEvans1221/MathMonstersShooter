@@ -52,7 +52,7 @@ export class EntityManager {
         }
     }
 
-    update(dt, width, height) {
+    update(dt, width, height, globalSpeedMultiplier = 1) {
         const hasActiveBullets = this.bullets.length > 0;
         let escaped = 0;
 
@@ -62,7 +62,7 @@ export class EntityManager {
 
             // Stop moving if bullets are active
             if (!hasActiveBullets) {
-                m.y += m.speed * dt;
+                m.y += m.speed * dt * globalSpeedMultiplier;
             }
 
             if (Collision.isOffScreenBottom(m, height)) {
