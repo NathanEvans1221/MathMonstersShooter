@@ -10,7 +10,7 @@ defineEmits(['answer'])
 
 <template>
   <div class="answer-panel">
-    <div v-if="!options || options.length === 0" class="no-target">Wait for Target...</div>
+    <div v-if="!options || options.length === 0" class="no-target">{{ $t('wait_target') }}</div>
     <div v-else class="options-grid">
         <button 
           v-for="opt in options" 
@@ -43,7 +43,7 @@ defineEmits(['answer'])
 }
 
 .option-btn {
-  background: rgba(0, 243, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   border: 2px solid var(--primary-color);
   color: var(--primary-color);
   font-size: 2.5rem;
@@ -55,7 +55,6 @@ defineEmits(['answer'])
   transition: all 0.1s;
   font-family: inherit;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(0,243,255,0.2);
 }
 
 .option-btn:hover {

@@ -7,9 +7,9 @@ defineProps({
 
 <template>
   <div class="hud">
-    <div class="score">SCORE: <span class="val">{{ score }}</span></div>
+    <div class="score">{{ $t('score') }} <span class="val">{{ score }}</span></div>
     <div class="lives">
-      LIVES: 
+      {{ $t('lives') }} 
       <span v-for="n in lives" :key="n" class="heart">❤️</span>
     </div>
   </div>
@@ -35,12 +35,10 @@ defineProps({
 
 .score {
   color: var(--primary-color);
-  text-shadow: 0 0 10px var(--primary-color);
 }
 
 .lives {
   color: #ff3366;
-  text-shadow: 0 0 10px #ff3366;
 }
 
 .heart {

@@ -38,7 +38,7 @@ export class GameEngine {
         this.canvas.height = h;
         if (this.entityManager.player) {
             this.entityManager.player.x = w / 2;
-            this.entityManager.player.y = h - 80;
+            this.entityManager.player.y = h - 180;
         }
     }
 
@@ -51,7 +51,7 @@ export class GameEngine {
 
         // Set player init pos
         this.entityManager.player.x = this.width / 2;
-        this.entityManager.player.y = this.height - 80;
+        this.entityManager.player.y = this.height - 180;
 
         this.state = 'playing';
 
@@ -120,19 +120,31 @@ export class GameEngine {
 
         // 2. Spawning
         this.spawnTimer += dt;
-        if (this.spawnTimer > this.spawnInterval) {
+        const currentCount = this.entityManager.monsters.length;
+
+        // Force spawn if less than 3
+        if (currentCount < 3 && this.spawnTimer > 500) {
             this.spawnMonster();
+            this.spawnTimer = 0;
+        }
+        // Normal spawn interval up to 5 max
+        else if (this.spawnTimer > this.spawnInterval) {
+            if (currentCount < 5) {
+                this.spawnMonster();
+            }
             this.spawnTimer = 0;
         }
 
         // 3. Update Entities 
         const speedFactor = dt / 16.66;
 
-        const result = this.entityManager.update(speedFactor, this.width, this.height);
+        const escapedCount = this.entityManager.update(speedFactor, this.width, this.height);
 
-        if (result === 'monster_escaped') {
-            SoundManager.wrong();
-            this.lives--;
+        if (escapedCount && escapedCount > 0) {
+            for (let i = 0; i < escapedCount; i++) {
+                SoundManager.wrong();
+                this.lives--;
+            }
             this.callbacks.onLives(this.lives);
             this.callbacks.onWrongAnswer();
             if (this.lives <= 0) this.gameOver();
@@ -155,7 +167,7 @@ export class GameEngine {
         this.entityManager.addMonster({
             x: x,
             y: -50,
-            speed: (1.5 + (this.level * 0.3)), // Adjusted speed
+            speed: (0.5 + (this.level * 0.1)), // Slower speed for better playability
             equation: problem.equation,
             answer: problem.answer,
             color: this.getRandomColor(),
@@ -164,7 +176,8 @@ export class GameEngine {
     }
 
     getRandomColor() {
-        const colors = ['#FF00FF', '#FF3366', '#FF6600', '#CC00FF'];
+        // Darker shades to ensure white text is readable
+        const colors = ['#C62828', '#1565C0', '#2E7D32', '#EF6C00', '#6A1B9A'];
         return colors[Math.floor(Math.random() * colors.length)];
     }
 
@@ -203,8 +216,6 @@ export class GameEngine {
         // Draw Player
         const p = this.entityManager.player;
         this.ctx.fillStyle = '#00F3FF';
-        this.ctx.shadowBlur = 15;
-        this.ctx.shadowColor = '#00F3FF';
 
         this.ctx.beginPath();
         this.ctx.moveTo(p.x, p.y - 40);
@@ -213,25 +224,19 @@ export class GameEngine {
         this.ctx.closePath();
         this.ctx.fill();
 
-        this.ctx.shadowBlur = 0;
-
         // Draw Monsters
-        this.ctx.font = 'bold 24px "Arial Rounded MT Bold", sans-serif';
+        this.ctx.font = 'bold 24px "Arial Rounded MT Bold", "ZhuyinFont", sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
         for (let m of this.entityManager.monsters) {
             if (!m.alive) continue;
 
-            this.ctx.shadowBlur = 10;
-            this.ctx.shadowColor = m.color;
-
             this.ctx.fillStyle = m.color;
             this.ctx.beginPath();
             this.ctx.arc(m.x, m.y, m.radius * m.scale, 0, Math.PI * 2);
             this.ctx.fill();
 
-            this.ctx.shadowBlur = 0;
 
             this.ctx.fillStyle = '#FFFFFF';
             if (m.scale > 0.8) {
@@ -241,8 +246,6 @@ export class GameEngine {
 
         // Draw Bullets
         this.ctx.fillStyle = '#FFFF00';
-        this.ctx.shadowBlur = 10;
-        this.ctx.shadowColor = '#FFFF00';
         for (let b of this.entityManager.bullets) {
             this.ctx.beginPath();
             this.ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);

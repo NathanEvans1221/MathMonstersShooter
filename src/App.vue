@@ -60,9 +60,9 @@ const handleAnswer = (val) => {
     </div>
 
     <div v-if="gameState === 'gameover'" class="gameover-screen glass">
-        <h1 class="neon-text" style="color: #ff3366">GAME OVER</h1>
-        <h2>FINAL SCORE: {{ score }}</h2>
-        <button class="neon-button" @click="startGame">RETRY MISSION</button>
+        <h1 class="neon-text" style="color: #ff3366">{{ $t('game_over') }}</h1>
+        <h2>{{ $t('final_score') }} {{ score }}</h2>
+        <button class="neon-button" @click="startGame">{{ $t('retry') }}</button>
     </div>
   </div>
 </template>

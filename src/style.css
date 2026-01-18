@@ -1,11 +1,22 @@
+@font-face {
+  font-family: 'ZhuyinFont';
+  src: url('/fonts/ZhuyinFont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --bg-color: #0B0F29; /* Deep Space Blue */
-  --primary-color: #00F3FF; /* Neon Cyan */
-  --secondary-color: #FF00FF; /* Magenta */
+  --bg-color: #121212;
+  /* Neutral Dark */
+  --primary-color: #FFFFFF;
+  /* High Contrast White */
+  --secondary-color: #FFD700;
+  /* Gold Accent */
   --text-color: #ffffff;
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --font-main: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+  --glass-bg: rgba(60, 60, 60, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --font-main: 'Arial Rounded MT Bold', 'ZhuyinFont', 'Helvetica Rounded', Arial, sans-serif;
 }
 
 body {
@@ -33,14 +44,14 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); */
 }
 
 .neon-text {
-  text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
+  /* No glow for clarity */
+  font-weight: bold;
 }
 
 .neon-border {
-  box-shadow: 0 0 10px var(--primary-color);
   border: 1px solid var(--primary-color);
 }

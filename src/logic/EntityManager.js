@@ -53,14 +53,21 @@ export class EntityManager {
     }
 
     update(dt, width, height) {
+        const hasActiveBullets = this.bullets.length > 0;
+        let escaped = 0;
+
         // Update Monsters
         for (let m of this.monsters) {
             if (m.scale < 1) m.scale += 0.05 * dt;
-            m.y += m.speed * dt;
+
+            // Stop moving if bullets are active
+            if (!hasActiveBullets) {
+                m.y += m.speed * dt;
+            }
 
             if (Collision.isOffScreenBottom(m, height)) {
                 m.alive = false;
-                return 'monster_escaped';
+                escaped++;
             }
         }
 
@@ -86,6 +93,6 @@ export class EntityManager {
         this.bullets = this.bullets.filter(b => b.alive);
         this.particles = this.particles.filter(p => p.life > 0);
 
-        return null;
+        return escaped;
     }
 }

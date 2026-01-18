@@ -4,10 +4,15 @@ defineEmits(['start'])
 
 <template>
   <div class="start-screen glass">
-    <h1 class="neon-text">MATH MONSTERS</h1>
-    <h2 class="neon-text">SHOOTER</h2>
-    <p>Math Calculation Fighter</p>
-    <button class="neon-button" @click="$emit('start')">START MISSION</button>
+    <div class="lang-switch">
+        <button @click="$i18n.locale = $i18n.locale === 'zh' ? 'en' : 'zh'">
+            {{ $i18n.locale === 'zh' ? 'EN' : '中文' }}
+        </button>
+    </div>
+    <h1 class="neon-text">{{ $t('title') }}</h1>
+    <h2 class="neon-text">{{ $t('subtitle') }}</h2>
+    <p>{{ $t('desc') }}</p>
+    <button class="neon-button" @click="$emit('start')">{{ $t('start') }}</button>
   </div>
 </template>
 
@@ -20,9 +25,8 @@ defineEmits(['start'])
   padding: 3rem;
   text-align: center;
   border-radius: 20px;
-  border: 1px solid var(--primary-color);
-  background: rgba(11, 15, 41, 0.8);
-  box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
+  border: 2px solid var(--primary-color);
+  background: rgba(18, 18, 18, 0.95);
   z-index: 10;
 }
 
@@ -59,9 +63,24 @@ p {
   font-family: inherit;
 }
 
+
 .neon-button:hover {
   background: var(--primary-color);
   color: #0b0f29;
   box-shadow: 0 0 30px var(--primary-color);
+}
+
+.lang-switch {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+.lang-switch button {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 5px 15px;
+    cursor: pointer;
+    border-radius: 15px;
 }
 </style>
