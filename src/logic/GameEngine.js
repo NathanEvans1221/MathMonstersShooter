@@ -305,7 +305,8 @@ export class GameEngine {
 
         // Draw Monsters
         // Draw Monsters
-        const fs = Math.max(16, Math.floor(24 * this.scaleFactor));
+        // Draw Monsters
+        const fs = Math.max(16, Math.floor(24 * this.scaleFactor * 1.5)); // Scale up by 1.5x
         this.ctx.font = `bold ${fs}px "Arial Rounded MT Bold", "ZhuyinFont", sans-serif`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
