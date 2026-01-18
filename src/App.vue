@@ -6,6 +6,7 @@ import GameHUD from './components/GameHUD.vue'
 import AnswerPanel from './components/AnswerPanel.vue'
 import StartScreen from './components/StartScreen.vue'
 import { TTSManager } from './logic/TTSManager.js'
+import { SoundManager } from './logic/SoundManager.js'
 
 const { t, locale } = useI18n()
 const gameState = ref('start') // start, playing, gameover
@@ -45,12 +46,48 @@ const onResumeClick = () => {
 const onExitClick = () => {
     speak('exit')
     gameState.value = 'start'
+    
+    // Explicitly stop BGM state (which might be "paused" from game) so we can restart it fresh
+    SoundManager.stopBGM()
+    
+    // Ensure BGM plays on Start Screen
+    setTimeout(() => {
+        SoundManager.playBGM()
+    }, 100)
 }
 
 const onRetryClick = () => {
     speak('retry')
     startGame()
 }
+
+// Global click handler to try starting BGM if blocked (browser policy)
+const handleInteraction = () => {
+    // Check if SoundManager is available (in case of HMR race)
+    if (typeof SoundManager === 'undefined') return;
+    
+    SoundManager.init();
+    if (SoundManager.ctx && SoundManager.ctx.state === 'suspended' && !SoundManager.muted) {
+        SoundManager.ctx.resume();
+    }
+    // Only play BGM if in Start or Playing state (Game Over stops it)
+    if (gameState.value === 'start' || gameState.value === 'playing') {
+        SoundManager.playBGM();
+    }
+}
+
+// Add event listener on mount
+import { onMounted, onUnmounted } from 'vue'
+onMounted(() => {
+    document.addEventListener('click', handleInteraction);
+    // Do not auto-play BGM to avoid "AudioContext was not allowed to start" warning.
+    // BGM will start on first user interaction via handleInteraction.
+})
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleInteraction);
+})
+
 
 // ... 
 

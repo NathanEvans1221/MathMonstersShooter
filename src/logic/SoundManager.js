@@ -11,9 +11,19 @@ export const SoundManager = {
     // New method to set muted state
     setMuted(val) {
         this.muted = val;
-        if (this.ctx) { // Ensure context exists before suspending/resuming
-            if (val) this.ctx.suspend();
-            else this.ctx.resume();
+        if (this.ctx) {
+            if (val) {
+                this.ctx.suspend();
+                if (this.bgmTimer) {
+                    clearTimeout(this.bgmTimer);
+                    this.bgmTimer = null;
+                }
+            } else {
+                this.ctx.resume();
+                if (this.isPlayingBGM && !this.bgmTimer) {
+                    this.scheduleBGM();
+                }
+            }
         }
     },
 
@@ -127,15 +137,29 @@ export const SoundManager = {
         }
     },
 
+    pauseBGM() {
+        if (this.bgmTimer) {
+            clearTimeout(this.bgmTimer);
+            this.bgmTimer = null;
+        }
+    },
+
+    resumeBGM() {
+        if (this.isPlayingBGM && !this.bgmTimer) {
+            this.scheduleBGM();
+        }
+    },
+
     scheduleBGM() {
         if (!this.isPlayingBGM) return;
 
         if (!this.muted) {
             this.init();
-            if (this.ctx.state === 'suspended') this.ctx.resume();
-
-            const freq = this.bgmNotes[this.bgmIndex % this.bgmNotes.length];
-            this.playBGMNote(freq);
+            // Check state without forcing resume (which causes warnings if no gesture)
+            if (this.ctx.state === 'running') {
+                const freq = this.bgmNotes[this.bgmIndex % this.bgmNotes.length];
+                this.playBGMNote(freq);
+            }
         }
 
         this.bgmIndex++;

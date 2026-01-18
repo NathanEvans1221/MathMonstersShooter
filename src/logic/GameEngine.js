@@ -27,7 +27,11 @@ export class GameEngine {
         this.score = 0;
         this.lives = 3;
         this.level = 1;
+        this.level = 1;
         this.scaleFactor = 1; // Default scale
+
+        this.clouds = []; // Background clouds
+        this.initClouds();
 
         this.paused = false; // Pause state
 
@@ -41,7 +45,10 @@ export class GameEngine {
     // Pause control
     setPaused(val) {
         this.paused = val;
-        if (!val) {
+        if (val) {
+            SoundManager.pauseBGM();
+        } else {
+            SoundManager.resumeBGM();
             this.lastTime = performance.now();
             requestAnimationFrame(this.loop);
         }
@@ -161,8 +168,10 @@ export class GameEngine {
     }
 
     update(dt) {
+        this.updateClouds(dt); // Update background clouds
+
         // 0. Win Condition
-        if (this.score >= 500) {
+        if (this.score >= 400) {
             this.gameWin();
             return;
         }
@@ -350,6 +359,9 @@ export class GameEngine {
     draw() {
         this.ctx.clearRect(0, 0, this.width, this.height);
 
+        // Draw Background Clouds
+        this.drawClouds();
+
         // Draw Player (Cute Ship)
         const p = this.entityManager.player;
         const ctx = this.ctx;
@@ -471,6 +483,57 @@ export class GameEngine {
             this.ctx.arc(pt.x, pt.y, Math.random() * 3 + 1, 0, Math.PI * 2);
             this.ctx.fill();
             this.ctx.globalAlpha = 1.0;
+        }
+    }
+    initClouds() {
+        this.clouds = [];
+        const count = 8;
+        for (let i = 0; i < count; i++) {
+            this.clouds.push(this.createCloud(true));
+        }
+    }
+
+    createCloud(randomY = false) {
+        const s = this.scaleFactor || 1;
+        return {
+            x: Math.random() * this.width,
+            y: randomY ? Math.random() * this.height : -150 * s,
+            speed: (Math.random() * 0.05 + 0.02) * s, // Slow drift
+            size: (Math.random() * 50 + 50),
+            opacity: Math.random() * 0.15 + 0.05, // Very subtle
+            puffs: Array.from({ length: 4 }, () => ({
+                dx: (Math.random() - 0.5) * 80,
+                dy: (Math.random() - 0.5) * 40,
+                r: Math.random() * 0.4 + 0.6
+            }))
+        };
+    }
+
+    updateClouds(dt) {
+        const s = this.scaleFactor || 1;
+        for (let i = 0; i < this.clouds.length; i++) {
+            const c = this.clouds[i];
+            c.y += c.speed * dt;
+            // Reset if out of bounds
+            if (c.y > this.height + 150 * s) {
+                this.clouds[i] = this.createCloud(false);
+            }
+        }
+    }
+
+    drawClouds() {
+        const s = this.scaleFactor || 1;
+        for (let c of this.clouds) {
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${c.opacity})`;
+            this.ctx.beginPath();
+            for (let p of c.puffs) {
+                const cx = c.x + p.dx * s;
+                const cy = c.y + p.dy * s;
+                const r = c.size * p.r * s;
+                this.ctx.moveTo(cx + r, cy);
+                this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            }
+            this.ctx.fill();
         }
     }
 }
