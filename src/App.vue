@@ -49,12 +49,21 @@ const onRetryClick = () => {
 
 // ... 
 
+const isWin = ref(false)
+
 const onScore = (val) => score.value = val
 const onLives = (val) => lives.value = val
 const onOptions = (opts) => currentOptions.value = opts
-const onGameOver = (finalScore) => {
+const onGameOver = (finalScore, winStatus = false) => {
     score.value = finalScore
+    isWin.value = winStatus
     gameState.value = 'gameover'
+    
+    if (winStatus) {
+        TTSManager.speak(t('you_win'), locale.value)
+    } else {
+        TTSManager.speak(t('game_over'), locale.value)
+    }
 }
 const onWrong = () => {
     const el = document.getElementById('app-container')
@@ -101,7 +110,9 @@ const resumeGame = () => {
     </div>
 
     <div v-if="gameState === 'gameover'" class="gameover-screen glass">
-        <h1 class="neon-text" style="color: #ff3366">{{ $t('game_over') }}</h1>
+        <h1 class="neon-text" :style="{color: isWin ? '#00ff99' : '#ff3366'}">
+            {{ isWin ? $t('you_win') : $t('game_over') }}
+        </h1>
         <h2>{{ $t('final_score') }} {{ score }}</h2>
         <button class="neon-button" @click="onRetryClick">{{ $t('retry') }}</button>
     </div>

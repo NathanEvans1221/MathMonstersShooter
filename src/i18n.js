@@ -15,7 +15,8 @@ const messages = {
         loading: 'Game Loading...',
         paused: 'PAUSED',
         resume: 'RESUME',
-        exit: 'EXIT'
+        exit: 'EXIT',
+        you_win: 'MISSION COMPLETE!'
     },
     zh: {
         title: '數學怪物',
@@ -31,7 +32,8 @@ const messages = {
         loading: '遊戲載入中...',
         paused: '遊戲暫停',
         resume: '繼續遊戲',
-        exit: '離開遊戲'
+        exit: '離開遊戲',
+        you_win: '恭喜過關!'
     }
 }
 

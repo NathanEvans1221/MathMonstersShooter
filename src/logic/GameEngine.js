@@ -131,6 +131,12 @@ export class GameEngine {
     }
 
     update(dt) {
+        // 0. Win Condition
+        if (this.score >= 500) {
+            this.gameWin();
+            return;
+        }
+
         // 1. Level Management
         if (this.score > this.level * 100) {
             this.level++;
@@ -258,7 +264,12 @@ export class GameEngine {
 
     gameOver() {
         this.state = 'gameover';
-        this.callbacks.onGameOver(this.score);
+        this.callbacks.onGameOver(this.score, false); // false = lost
+    }
+
+    gameWin() {
+        this.state = 'gamewin';
+        this.callbacks.onGameOver(this.score, true); // true = win
     }
 
     draw() {
