@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - 程式碼文檔優化：將 `src/logic/` 目錄下所有 `.js` 檔案（包含 `GameEngine`, `EntityManager`, `Collision`, `MathSystem`, `SoundManager`, `TTSManager`）以及 `i18n.js`, `main.js` 的註解全面轉換為**繁體中文**，並提供更詳細的函式說明與實作細節，提升程式碼可讀性與後續維護便利性。
+- 專案配置：將 `icon.png` 移至 `public/` 目錄，並更新 `index.html` 以支援正式的網站圖示。
 - 初始化 Vue 3 + Vite 專案架構。
 - 新增及實作 `MathSystem.js` 負責 0-20 加減法題目生成。
 - 新增及實作 `GameEngine.js` 處理遊戲主循環、狀態管理。
