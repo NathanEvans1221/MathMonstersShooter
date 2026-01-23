@@ -38,6 +38,22 @@ export class GameEngine {
         this.clouds = []; // 背景雲朵
         this.initClouds();
 
+        this.playerImage = new Image();
+        this.playerImage.onload = () => {
+            // 圖片載入完成後，如果處於暫停或閒置狀態，強制重繪一次以顯示圖片
+            if (this.state === 'idle' || this.paused) {
+                this.draw();
+            }
+        };
+        this.playerImage.onerror = (e) => {
+            console.error("Player ship image failed to load:", e);
+        };
+        // 使用 import.meta.url 確保路徑正確解析 (雖然 public 路徑通常可行，但加上 onload 更保險)
+        this.playerImage.src = './images/player_ship.png';
+
+        this.monsterImage = new Image();
+        this.monsterImage.src = './images/monster.png';
+
         this.paused = false; // 是否暫停中
 
         this.loop = this.loop.bind(this);
@@ -441,30 +457,36 @@ export class GameEngine {
 
         // 繪製玩家 (可愛的小飛船)
         const p = this.entityManager.player;
-        const ctx = this.ctx;
-
-        ctx.fillStyle = '#FFB7E1'; // 粉色主體
-
-        // 身體 (橢圓)
         const s = this.scaleFactor;
-        ctx.beginPath();
-        ctx.ellipse(p.x, p.y, 25 * s, 35 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
 
-        // 翅膀
-        ctx.fillStyle = '#A2E8FA'; // 青色翅膀
-        ctx.beginPath();
-        ctx.ellipse(p.x - 25 * s, p.y + 10 * s, 15 * s, 10 * s, -0.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(p.x + 25 * s, p.y + 10 * s, 15 * s, 10 * s, 0.5, 0, Math.PI * 2);
-        ctx.fill();
+        // 如果圖片已載入完成則繪製圖檔
+        if (this.playerImage.complete && this.playerImage.naturalWidth !== 0) {
+            const w = 220 * s; // 寬度 (放大)
+            const h = 220 * s; // 高度 (放大)
+            this.ctx.drawImage(this.playerImage, p.x - w / 2, p.y - h / 2, w, h);
+        } else {
+            // 降級處理：圖片未載入時仍繪製原本的幾何圖形
+            const ctx = this.ctx;
+            ctx.fillStyle = '#FFB7E1'; // 粉色主體
+            ctx.beginPath();
+            ctx.ellipse(p.x, p.y, 25 * s, 35 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
 
-        // 駕駛艙
-        ctx.fillStyle = '#FFFFFF';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y - 10 * s, 10 * s, 0, Math.PI * 2);
-        ctx.fill();
+            // 翅膀
+            ctx.fillStyle = '#A2E8FA'; // 青色翅膀
+            ctx.beginPath();
+            ctx.ellipse(p.x - 25 * s, p.y + 10 * s, 15 * s, 10 * s, -0.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(p.x + 25 * s, p.y + 10 * s, 15 * s, 10 * s, 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 駕駛艙
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y - 10 * s, 10 * s, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         // 繪製怪物
         const fs = Math.max(16, Math.floor(24 * this.scaleFactor * 1.5));
@@ -477,18 +499,26 @@ export class GameEngine {
 
             this.ctx.fillStyle = m.color;
 
-            // 繪製怪物身體 (圓形)
-            this.ctx.beginPath();
-            const bodyR = Math.max(0, m.radius * m.scale * this.scaleFactor);
-            this.ctx.arc(m.x, m.y, bodyR, 0, Math.PI * 2);
-            this.ctx.fill();
+            // 繪製怪物
+            // 如果圖片已載入完成則繪製圖檔
+            if (this.monsterImage.complete && this.monsterImage.naturalWidth !== 0) {
+                // 稍微放大一點怪物圖片以配合文字
+                const size = Math.max(0, m.radius * m.scale * this.scaleFactor * 10.0);
+                this.ctx.drawImage(this.monsterImage, m.x - size / 2, m.y - size / 2, size, size);
+            } else {
+                // 降級處理：繪製怪物身體 (圓形)
+                this.ctx.beginPath();
+                const bodyR = Math.max(0, m.radius * m.scale * this.scaleFactor);
+                this.ctx.arc(m.x, m.y, bodyR, 0, Math.PI * 2);
+                this.ctx.fill();
 
-            // 繪製耳朵 (可愛小熊風格)
-            const r = Math.max(0, m.radius * m.scale * this.scaleFactor);
-            this.ctx.beginPath();
-            this.ctx.arc(m.x - r * 0.7, m.y - r * 0.7, r * 0.4, 0, Math.PI * 2); // 左耳
-            this.ctx.arc(m.x + r * 0.7, m.y - r * 0.7, r * 0.4, 0, Math.PI * 2); // 右耳
-            this.ctx.fill();
+                // 繪製耳朵 (可愛小熊風格)
+                const r = Math.max(0, m.radius * m.scale * this.scaleFactor);
+                this.ctx.beginPath();
+                this.ctx.arc(m.x - r * 0.7, m.y - r * 0.7, r * 0.4, 0, Math.PI * 2); // 左耳
+                this.ctx.arc(m.x + r * 0.7, m.y - r * 0.7, r * 0.4, 0, Math.PI * 2); // 右耳
+                this.ctx.fill();
+            }
 
             if (m.scale > 0.8) {
                 // 為算式增加背景半透明圓角框，確保在任何背景顏色下都清晰
