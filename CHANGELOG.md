@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-01-23
+
+### Added
+- 新增功能：**遊戲模式選擇**。首頁新增三種運算模式供玩家選擇：「加法模式」（一位數加一位數，答案 0-18）、「減法模式」（被減數 1-18、減數 0-9，答案限非負一位數 0-9）、「乘法模式」（一位數乘一位數，答案 1-81）。
+- 新增功能：**難度選擇**。首頁新增三種難度等級供玩家選擇：「困難」（400分過關）、「中等」（350分過關）、「簡單」（300分過關）。
+
 ## [Unreleased] - 2026-01-18
 
 ### Added

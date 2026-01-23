@@ -71,12 +71,13 @@ const handleAnswer = (val) => {
 /**
  * 對外公開的方法：重新開始遊戲邏輯
  */
-const restartGame = () => {
+const restartGame = (settings) => {
     if(engine) {
          engine.resize(canvasRef.value.clientWidth, canvasRef.value.clientHeight)
-         engine.start()
+         engine.start(settings)
     }
 }
+
 
 /**
  * 對外公開的方法：外部強制控制暫停

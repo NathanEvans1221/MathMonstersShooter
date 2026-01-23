@@ -88,8 +88,19 @@ export class GameEngine {
 
     /**
      * 開始新遊戲
+     * @param {Object} settings - 包含 mode 與 difficulty
      */
-    start() {
+    start(settings = {}) {
+        const { mode = 'add', difficulty = 'medium' } = settings;
+
+        switch (difficulty) {
+            case 'easy': this.winningScore = 300; break;
+            case 'medium': this.winningScore = 350; break;
+            case 'hard': this.winningScore = 400; break;
+            default: this.winningScore = 350;
+        }
+
+        this.mathSystem.setMode(mode);
         if (this.victoryTimer) clearTimeout(this.victoryTimer);
         this.score = 0;
         this.bulletRadius = 5;
@@ -222,7 +233,7 @@ export class GameEngine {
         this.updateClouds(dt); // 更新背景雲朵
 
         // 0. 勝利判定
-        if (this.score >= 400) {
+        if (this.score >= this.winningScore) {
             this.gameWin();
             return;
         }

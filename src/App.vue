@@ -29,7 +29,7 @@ const speak = (key) => {
 /**
  * 開始或重新開始遊戲
  */
-const startGame = () => {
+const startGame = (settings) => {
     gameState.value = 'playing'
     score.value = 0
     lives.value = 3
@@ -37,16 +37,17 @@ const startGame = () => {
     
     // 延遲一點點確保 DOM 已渲染，然後重置遊戲引擎
     setTimeout(() => {
-        if(gameCanvas.value) gameCanvas.value.restartGame()
+        if(gameCanvas.value) gameCanvas.value.restartGame(settings)
     }, 50)
 }
 
 // --- 事件處理常式 ---
 
-const onStartClick = () => {
+const onStartClick = (settings) => {
     speak('start')
-    startGame()
+    startGame(settings)
 }
+
 
 const onResumeClick = () => {
     speak('resume')

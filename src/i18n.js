@@ -20,8 +20,21 @@ const messages = {
         paused: 'PAUSED',
         resume: 'RESUME',
         exit: 'EXIT',
-        you_win: 'CONGRATULATIONS!'
+        you_win: 'CONGRATULATIONS!',
+        mode: 'Mode',
+        difficulty: 'Diff',
+        modes: {
+            add: 'Addition',
+            sub: 'Subtraction',
+            mul: 'Multiplication'
+        },
+        difficulties: {
+            easy: 'Easy',
+            medium: 'Medium',
+            hard: 'Hard'
+        }
     },
+
     zh: {
         title: '數學怪物',
         subtitle: '射擊手',
@@ -37,8 +50,21 @@ const messages = {
         paused: '遊戲暫停',
         resume: '繼續遊戲',
         exit: '離開遊戲',
-        you_win: '恭喜你破關!'
+        you_win: '恭喜你破關!',
+        mode: '模式',
+        difficulty: '難度',
+        modes: {
+            add: '加法',
+            sub: '減法',
+            mul: '乘法'
+        },
+        difficulties: {
+            easy: '簡單',
+            medium: '中等',
+            hard: '困難'
+        }
     }
+
 }
 
 export const i18n = createI18n({

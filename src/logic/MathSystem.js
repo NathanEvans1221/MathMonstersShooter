@@ -4,7 +4,11 @@
  */
 export class MathSystem {
   constructor() {
-    this.maxNumber = 20; // 最大數值範圍 (基準值)
+    this.mode = 'add'; // 預設加法
+  }
+
+  setMode(mode) {
+    this.mode = mode || 'add';
   }
 
   /**
@@ -12,29 +16,58 @@ export class MathSystem {
    * @returns {Object} 包含算式、答案與選項的物件
    */
   generateProblem() {
-    // 50% 機率生成加法，50% 機率生成減法
-    const isAddition = Math.random() < 0.5;
-    let a, b, result, operator;
-
-    if (isAddition) {
-      // 加法：確保兩數之和不超過 20 (符合國小一年級程度)
-      a = Math.floor(Math.random() * 21); // 0-20
-      b = Math.floor(Math.random() * (21 - a)); // 確保 a + b <= 20
-      result = a + b;
-      operator = '+';
-    } else {
-      // 減法：確保被減數大於減數 (答案為正數)
-      a = Math.floor(Math.random() * 21); // 0-20
-      b = Math.floor(Math.random() * (a + 1)); // 確保 0 <= b <= a
-      result = a - b;
-      operator = '-';
+    let problem;
+    switch (this.mode) {
+      case 'mul':
+        problem = this.generateMultiplication();
+        break;
+      case 'sub':
+        problem = this.generateSubtraction();
+        break;
+      case 'add':
+      default:
+        problem = this.generateAddition();
+        break;
     }
 
-    const options = this.generateOptions(result);
+    const options = this.generateOptions(problem.answer);
     return {
-      equation: `${a} ${operator} ${b} = ?`,
-      answer: result,
+      equation: problem.equation,
+      answer: problem.answer,
       options: options
+    };
+  }
+
+  generateAddition() {
+    // 加法：一位數 + 一位數 (0-9 + 0-9) = 0-18
+    const a = Math.floor(Math.random() * 10); // 0-9
+    const b = Math.floor(Math.random() * 10); // 0-9
+    return {
+      equation: `${a} + ${b} = ?`,
+      answer: a + b
+    };
+  }
+
+  generateSubtraction() {
+    // 減法：答案為 0-9 (非負一位數)，減數為 0-9
+    // 公式：被減數 - 減數 = 答案
+    // -> 被減數 = 答案 + 減數
+    const answer = Math.floor(Math.random() * 10); // 0-9
+    const right = Math.floor(Math.random() * 10); // 0-9
+    const left = answer + right; // 0-18
+    return {
+      equation: `${left} - ${right} = ?`,
+      answer: answer
+    };
+  }
+
+  generateMultiplication() {
+    // 乘法：一位數 * 一位數 (1-9 * 1-9) = 1-81
+    const a = Math.floor(Math.random() * 9) + 1; // 1-9
+    const b = Math.floor(Math.random() * 9) + 1; // 1-9
+    return {
+      equation: `${a} × ${b} = ?`,
+      answer: a * b
     };
   }
 
@@ -45,17 +78,21 @@ export class MathSystem {
    */
   generateOptions(correctValue) {
     const options = new Set([correctValue]);
+    const range = this.mode === 'mul' ? 81 : 20; // 根據模式調整干擾項可能的範圍
+
     while (options.size < 3) {
-      // 生成與答案接近的干擾項 (+/- 1 到 3 之間)
-      const offset = (Math.floor(Math.random() * 3) + 1) * (Math.random() > 0.5 ? 1 : -1);
+      // 生成與答案接近的干擾項
+      // 乘法時誤差放大一些 (+/- 1~10)，加減法維持小誤差 (+/- 1~3)
+      const maxOffset = this.mode === 'mul' ? 10 : 3;
+      const offset = (Math.floor(Math.random() * maxOffset) + 1) * (Math.random() > 0.5 ? 1 : -1);
       const val = correctValue + offset;
 
       // 確保選項為正數且在合理範圍內
-      if (val >= 0 && val <= 40) {
+      if (val >= 0 && val <= range + 10) {
         options.add(val);
       } else {
-        // 如果偏移後超出範圍，則隨機生成一個 0-20 的數字
-        options.add(Math.floor(Math.random() * 21));
+        // 如果偏移後超出範圍，則隨機生成一個範圍內的數字
+        options.add(Math.floor(Math.random() * (range + 1)));
       }
     }
     // 打亂選項順序
