@@ -38,3 +38,6 @@ coverage/
 # 作業系統暫存檔
 *.tmp
 *.temp
+
+.python-version
+
