@@ -6,6 +6,10 @@ import { createI18n } from 'vue-i18n'
  */
 const messages = {
     en: {
+        hint_make_ten: 'Make ten first: {expression}',
+        hint_add: 'Start at {a}, then count forward {b} steps.',
+        hint_sub: 'Start at {a}, then count back {b} steps.',
+        hint_mul: '{a} groups of {b}: try {expression}',
         mission_progress: 'Mission progress',
         remaining_monsters: '{count} more monsters to win',
         difficulty_summary: 'Numbers up to {maxOperand} · Goal: {winningScore} points',
@@ -45,6 +49,10 @@ const messages = {
     },
 
     zh: {
+        hint_make_ten: '先湊成十：{expression}',
+        hint_add: '從 {a} 開始，往後數 {b} 步。',
+        hint_sub: '從 {a} 開始，往回數 {b} 步。',
+        hint_mul: '{a} 組、每組 {b} 個，試著算：{expression}',
         mission_progress: '過關進度',
         remaining_monsters: '再擊退 {count} 隻就過關',
         difficulty_summary: '運算數字上限 {maxOperand} · 目標 {winningScore} 分',

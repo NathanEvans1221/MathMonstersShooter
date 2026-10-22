@@ -1,4 +1,5 @@
 import { DIFFICULTIES, normalizeSettings, SCORE_PER_KILL } from './GameSettings.js';
+import { getMathHint } from './MathHints.js';
 import { MathSystem } from './MathSystem.js';
 import { EntityManager } from './EntityManager.js';
 import { Collision } from './Collision.js';
@@ -208,6 +209,8 @@ export class GameEngine {
         this.entityManager.reset();
         this.spawnTimer = 0;
         this.targetMonster = null;
+        this.hintTarget = null;
+        this.callbacks.onHint?.(null);
         this.paused = false;
         this.state = 'playing';
 
@@ -268,6 +271,8 @@ export class GameEngine {
         if (!closestMonster) return;
 
         if (closestMonster.answer === value) {
+            closestMonster.wrongAttempts = 0;
+            this.callbacks.onHint?.(null);
             // 答對了
             this.consecutiveWrong = 0; // 重設連續錯誤計數
             SoundManager.shoot();
@@ -281,6 +286,10 @@ export class GameEngine {
             // 答對會增加子彈大小（威力感）
             this.bulletRadius = Math.min(GameEngine.BULLET_MAX_RADIUS, this.bulletRadius + GameEngine.BULLET_RADIUS_INCREMENT);
         } else {
+            closestMonster.wrongAttempts = (closestMonster.wrongAttempts || 0) + 1;
+            if (closestMonster.wrongAttempts >= 2) {
+                this.callbacks.onHint?.(getMathHint(closestMonster.equation));
+            }
             // 答錯了
             this.consecutiveWrong++;
             SoundManager.wrong();
@@ -487,6 +496,11 @@ export class GameEngine {
      */
     updateOptions() {
         this.targetMonster = this.getClosestMonster();
+        if (this.hintTarget !== this.targetMonster) {
+            this.hintTarget = this.targetMonster;
+            if (this.targetMonster) this.targetMonster.wrongAttempts = 0;
+            this.callbacks.onHint?.(null);
+        }
         if (this.targetMonster) {
             this.callbacks.onOptions(this.targetMonster.options);
         } else {

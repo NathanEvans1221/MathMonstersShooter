@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { GameEngine } from '../logic/GameEngine.js'
 
-const emit = defineEmits(['score', 'lives', 'gameover', 'options', 'wrong', 'correct'])
+const emit = defineEmits(['score', 'lives', 'gameover', 'options', 'wrong', 'correct', 'hint'])
 const canvasRef = ref(null)
 let engine = null
 let resizeObserver = null
@@ -12,6 +12,7 @@ onMounted(() => {
         onScore: (s) => emit('score', s),
         onLives: (l) => emit('lives', l),
         onOptions: (opts) => emit('options', opts),
+        onHint: (hint) => emit('hint', hint),
         onGameOver: (s, w) => emit('gameover', s, w),
         onWrongAnswer: () => emit('wrong'),
         onCorrectAnswer: () => emit('correct')

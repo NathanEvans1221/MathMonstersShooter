@@ -12,6 +12,7 @@ import { preferences, readHighScore, saveHighScore } from './logic/Preferences.j
 import { InputController } from './logic/InputController.js'
 import { DIFFICULTIES, normalizeSettings } from './logic/GameSettings.js'
 const currentSettings = ref(normalizeSettings(preferences))
+const currentHint = ref(null)
 
 const { t, tm, locale } = useI18n()
 locale.value = preferences.locale
@@ -215,6 +216,7 @@ const resumeGame = () => {
         @gameover="onGameOver"
         @wrong="onWrong"
         @correct="onCorrect"
+        @hint="currentHint = $event"
     />
 
     <p v-if="gameState === 'loading'" class="loading" role="status">{{ t('loading') }}</p><StartScreen v-if="gameState === 'start'" :high-score="highScore" @start="onStartClick" />
@@ -222,7 +224,7 @@ const resumeGame = () => {
     <div v-if="gameState === 'playing'">
         <GameHUD :score="score" :lives="lives"
             :target-score="DIFFICULTIES[currentSettings.difficulty].winningScore" @pause="onPause" />
-        <AnswerPanel :options="currentOptions" @answer="handleAnswer" />
+        <AnswerPanel :options="currentOptions" :hint="currentHint" @answer="handleAnswer" />
     </div>
 
     <div v-if="gameState === 'gameover'" class="gameover-screen glass" :class="{ win: isWin }">

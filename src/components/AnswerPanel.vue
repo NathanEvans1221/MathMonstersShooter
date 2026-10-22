@@ -7,6 +7,7 @@ import { TTSManager } from '../logic/TTSManager.js'
  * 負責顯示當前目標怪物的多個答案選項，並處理點擊選取
  */
 defineProps({
+  hint: Object,
   options: {
     type: Array, // 答案選項陣列
     default: () => []
@@ -32,6 +33,7 @@ const onAnswerClick = (opt) => {
 
 <template>
   <div class="answer-panel">
+    <p v-if="hint" class="learning-hint" role="status">{{ $t(hint.key, hint.params) }}</p>
     <div v-if="!options || options.length === 0" class="no-target">{{ $t('wait_target') }}</div>
     <div v-else class="options-grid">
         <button 
@@ -47,6 +49,16 @@ const onAnswerClick = (opt) => {
 </template>
 
 <style scoped>
+.learning-hint {
+  background: rgba(11, 15, 41, 0.95);
+  border: 1px solid var(--secondary-color);
+  border-radius: 10px;
+  color: var(--text-color);
+  padding: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: clamp(0.85rem, 3vw, 1rem);
+  overflow-wrap: anywhere;
+}
 .answer-panel {
   position: absolute;
   bottom: 12vh;

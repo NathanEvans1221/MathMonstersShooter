@@ -38,8 +38,12 @@ const assert = require('node:assert/strict');
             engine.updateOptions();
         });
         await page.getByRole('button', { name: '5', exact: true }).waitFor();
+        await page.getByRole('button', { name: '4', exact: true }).click();
+        await page.getByRole('button', { name: '4', exact: true }).click();
+        await page.locator('.learning-hint').waitFor();
         await page.keyboard.press('2');
         await page.waitForFunction(() => window.testEngine.score === 10);
+        assert.equal(await page.locator('.learning-hint').count(), 0);
         await page.locator('.mute-btn').click();
         for (let i = 0; i < 3; i++) {
             await page.locator('.pause-btn').click();
@@ -64,6 +68,20 @@ const assert = require('node:assert/strict');
         await page.locator('.hud').waitFor();
         const progressBox = await page.locator('.mission-progress').boundingBox();
         assert.ok(progressBox.x >= 0 && progressBox.x + progressBox.width <= 375);
+        await page.evaluate(() => {
+            const engine = window.testEngine;
+            engine.entityManager.monsters = [];
+            engine.entityManager.addMonster({ x: 187, y: 200, speed: 0.1,
+                equation: '8 + 5 = ?', answer: 13, options: [12, 13, 14] });
+            engine.updateOptions();
+        });
+        await page.getByRole('button', { name: '12', exact: true }).click();
+        await page.getByRole('button', { name: '12', exact: true }).click();
+        await page.locator('.learning-hint').waitFor();
+        assert.ok((await page.locator('.learning-hint').textContent()).includes('8 + 2 + 3'));
+        const hintBox = await page.locator('.learning-hint').boundingBox();
+        assert.ok(hintBox.x >= 0 && hintBox.x + hintBox.width <= 375);
+        await page.screenshot({ path: 'scripts/mobile.tmp', type: 'png' });
         assert.deepEqual(errors, []);
         console.log('PASS: 桌面開始、三次暫停恢復、勝利、保留設定重試、離開與手機尺寸首頁；無頁面錯誤。');
     } finally {
