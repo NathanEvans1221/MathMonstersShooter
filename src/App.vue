@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameCanvas from './components/GameCanvas.vue'
 import GameHUD from './components/GameHUD.vue'
@@ -8,7 +8,17 @@ import StartScreen from './components/StartScreen.vue'
 import { TTSManager } from './logic/TTSManager.js'
 import { SoundManager } from './logic/SoundManager.js'
 
+import { preferences, readHighScore, saveHighScore } from './logic/Preferences.js'
+import { InputController } from './logic/InputController.js'
+
 const { t, locale } = useI18n()
+locale.value = preferences.locale
+watch(locale, value => { preferences.locale = value })
+watch(() => preferences.muted, value => {
+    SoundManager.setMuted(value)
+    TTSManager.setEnabled(!value)
+}, { immediate: true })
+let inputController = null
 
 // --- 響應式狀態 ---
 const gameState = ref('start') // 遊戲狀態：start (初始), playing (進行中), paused (暫停), gameover (結算)
@@ -38,7 +48,10 @@ const startGame = async (settings) => {
     currentOptions.value = []
     isWin.value = false
     isNewRecord.value = false
-    if (await gameCanvas.value.restartGame(settings)) gameState.value = 'playing'
+    if (await gameCanvas.value.restartGame(settings)) {
+        gameState.value = 'playing'
+        if (document.hidden) onPause()
+    }
 }
 
 // --- 事件處理常式 ---
@@ -92,12 +105,23 @@ onMounted(() => {
     document.addEventListener('click', handleInteraction);
 
     // 載入最高分數
-    const saved = localStorage.getItem('mathMonstersHighScore')
-    if (saved) highScore.value = parseInt(saved, 10)
+    highScore.value = readHighScore()
+    inputController = new InputController(document, {
+        getState: () => gameState.value,
+        getOptions: () => currentOptions.value,
+        onAnswer: (value) => {
+            TTSManager.speak(String(value), locale.value)
+            handleAnswer(value)
+        },
+        onPause
+    })
+    inputController.start()
 })
 
 onUnmounted(() => {
     document.removeEventListener('click', handleInteraction);
+    inputController?.stop()
+    SoundManager.stopBGM()
 })
 
 // --- 來自 GameCanvas 的回調事件 ---
@@ -120,7 +144,7 @@ const onGameOver = (finalScore, winStatus = false) => {
     if (finalScore > highScore.value) {
         highScore.value = finalScore
         isNewRecord.value = true
-        localStorage.setItem('mathMonstersHighScore', finalScore.toString())
+        saveHighScore(finalScore)
     } else {
         isNewRecord.value = false
     }

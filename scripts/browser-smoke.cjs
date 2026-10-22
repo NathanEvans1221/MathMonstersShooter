@@ -21,6 +21,17 @@ const assert = require('node:assert/strict');
         await page.getByRole('button', { name: '困難', exact: true }).click();
         await page.getByRole('button', { name: '開始任務', exact: true }).click();
         await page.locator('.hud').waitFor();
+        await page.evaluate(() => {
+            const engine = window.testEngine;
+            engine.entityManager.addMonster({ x: engine.entityManager.player.x,
+                y: engine.entityManager.player.y - 150, speed: 0.5,
+                equation: '2 + 3 = ?', answer: 5, options: [4, 5, 6] });
+            engine.updateOptions();
+        });
+        await page.getByRole('button', { name: '5', exact: true }).waitFor();
+        await page.keyboard.press('2');
+        await page.waitForFunction(() => window.testEngine.score === 10);
+        await page.locator('.mute-btn').click();
         for (let i = 0; i < 3; i++) {
             await page.locator('.pause-btn').click();
             assert.equal(await page.evaluate(() => window.testEngine.paused), true);
@@ -30,6 +41,7 @@ const assert = require('node:assert/strict');
         await page.locator('.gameover-screen').waitFor();
         await page.getByRole('button', { name: '重新任務', exact: true }).click();
         await page.locator('.hud').waitFor();
+        assert.equal(await page.locator('.mute-btn').getAttribute('aria-label'), '開啟聲音');
         assert.deepEqual(await page.evaluate(() => window.testEngine.settings),
             { mode: 'mul', difficulty: 'hard' });
         await page.locator('.pause-btn').click();

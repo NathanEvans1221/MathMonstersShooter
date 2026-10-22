@@ -1,8 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import { toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
-import { SoundManager } from '../logic/SoundManager.js'
+import { preferences } from '../logic/Preferences.js'
 
 /**
  * 遊戲抬頭顯示器 (HUD)
@@ -15,15 +15,13 @@ const props = defineProps({
 
 const emit = defineEmits(['pause']) // 發送暫停事件
 const { t, locale } = useI18n()
-const isMuted = ref(false) // 靜音狀態旗標
+const isMuted = toRef(preferences, 'muted')
 
 /**
  * 切換靜音狀態 (同步控制 BGM 與 TTS)
  */
 const toggleMute = () => {
     isMuted.value = !isMuted.value;
-    SoundManager.setMuted(isMuted.value);
-    TTSManager.setEnabled(!isMuted.value);
 }
 
 /**
@@ -39,16 +37,16 @@ const onPauseClick = () => {
 <template>
   <div class="hud">
     <div class="score-row">
-        <button class="mute-btn" @click="toggleMute">
+        <button class="mute-btn" :aria-label="t(isMuted ? 'unmute' : 'mute')" @click="toggleMute">
             {{ isMuted ? '🔇' : '🔊' }}
         </button>
         <div class="score">{{ $t('score') }} <span class="val">{{ score }}</span></div>
     </div>
-    
+
     <div class="lives-container">
-        <button class="pause-btn" @click="onPauseClick">⏸</button>
+        <button class="pause-btn" :aria-label="t('paused')" @click="onPauseClick">⏸</button>
         <div class="lives">
-        {{ $t('lives') }} 
+        {{ $t('lives') }}
         <span v-for="n in lives" :key="n" class="heart">❤️</span>
         </div>
     </div>
@@ -71,7 +69,7 @@ const onPauseClick = () => {
 .score-row {
   display: flex;
   align-items: center;
-  gap: 15px; 
+  gap: 15px;
   pointer-events: auto;
 }
 

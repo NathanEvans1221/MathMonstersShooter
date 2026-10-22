@@ -6,6 +6,8 @@ import { createI18n } from 'vue-i18n'
  */
 const messages = {
     en: {
+        mute: 'Mute',
+        unmute: 'Unmute',
         title: 'MATH MONSTERS',
         subtitle: 'SHOOTER',
         desc: 'Math Calculation Fighter',
@@ -38,6 +40,8 @@ const messages = {
     },
 
     zh: {
+        mute: '靜音',
+        unmute: '開啟聲音',
         title: '數學怪物',
         subtitle: '射擊手',
         desc: '心算戰鬥機',
@@ -77,4 +81,3 @@ export const i18n = createI18n({
     fallbackLocale: 'en', // 備援語言：英文
     messages
 })
-

@@ -1,7 +1,8 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
-import { ref } from 'vue'
+import { toRef } from 'vue'
+import { preferences } from '../logic/Preferences.js'
 
 /**
  * 遊戲起始畫面組件
@@ -17,8 +18,8 @@ const props = defineProps({
 const { locale, t } = useI18n()
 const version = __APP_VERSION__ // 從 Vite 配置中注入的應用程式版本號
 
-const selectedMode = ref('add')
-const selectedDifficulty = ref('medium') // default to medium (350) based on PRD
+const selectedMode = toRef(preferences, 'mode')
+const selectedDifficulty = toRef(preferences, 'difficulty') // default to medium (350) based on PRD
 
 /**
  * 調用語音合成播放文字
@@ -47,9 +48,9 @@ const selectDifficulty = (diff) => {
 }
 
 const onStart = () => {
-    emit('start', { 
-        mode: selectedMode.value, 
-        difficulty: selectedDifficulty.value 
+    emit('start', {
+        mode: selectedMode.value,
+        difficulty: selectedDifficulty.value
     })
 }
 </script>
@@ -64,14 +65,14 @@ const onStart = () => {
     </div>
     <h1 class="neon-text">{{ $t('title') }}</h1>
     <h2 class="neon-text">{{ $t('subtitle') }}</h2>
-    
+
     <p v-if="highScore > 0" class="high-score">{{ $t('high_score') }} {{ highScore }}</p>
-    
+
     <div class="selection-group">
         <div class="label">{{ $t('mode') }}</div>
         <div class="buttons">
-            <button 
-                v-for="mode in ['add', 'sub', 'mul']" 
+            <button
+                v-for="mode in ['add', 'sub', 'mul']"
                 :key="mode"
                 :class="{ active: selectedMode === mode }"
                 @click="selectMode(mode)"
@@ -84,8 +85,8 @@ const onStart = () => {
     <div class="selection-group">
         <div class="label">{{ $t('difficulty') }}</div>
         <div class="buttons">
-            <button 
-                v-for="diff in ['easy', 'medium', 'hard']" 
+            <button
+                v-for="diff in ['easy', 'medium', 'hard']"
                 :key="diff"
                 :class="{ active: selectedDifficulty === diff }"
                 @click="selectDifficulty(diff)"
