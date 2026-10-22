@@ -1,10 +1,17 @@
+import { DIFFICULTIES } from './GameSettings.js';
+
 /**
  * 數學題目生成系統
  * 負責產生 0-20 範圍內的加減法題目，並生成干擾選項
  */
 export class MathSystem {
   constructor() {
+    this.difficulty = 'medium';
     this.mode = 'add'; // 預設加法
+  }
+
+  setDifficulty(value) {
+    this.difficulty = Object.hasOwn(DIFFICULTIES, value) ? value : 'medium';
   }
 
   setMode(mode) {
@@ -40,8 +47,8 @@ export class MathSystem {
 
   generateAddition() {
     // 加法：一位數 + 一位數 (0-9 + 0-9) = 0-18
-    const a = Math.floor(Math.random() * 10); // 0-9
-    const b = Math.floor(Math.random() * 10); // 0-9
+    const a = Math.floor(Math.random() * (DIFFICULTIES[this.difficulty].maxOperand + 1)); // 0-9
+    const b = Math.floor(Math.random() * (DIFFICULTIES[this.difficulty].maxOperand + 1)); // 0-9
     return {
       equation: `${a} + ${b} = ?`,
       answer: a + b
@@ -52,8 +59,8 @@ export class MathSystem {
     // 減法：答案為 0-9 (非負一位數)，減數為 0-9
     // 公式：被減數 - 減數 = 答案
     // -> 被減數 = 答案 + 減數
-    const answer = Math.floor(Math.random() * 10); // 0-9
-    const right = Math.floor(Math.random() * 10); // 0-9
+    const answer = Math.floor(Math.random() * (DIFFICULTIES[this.difficulty].maxOperand + 1)); // 0-9
+    const right = Math.floor(Math.random() * (DIFFICULTIES[this.difficulty].maxOperand + 1)); // 0-9
     const left = answer + right; // 0-18
     return {
       equation: `${left} - ${right} = ?`,
@@ -63,8 +70,8 @@ export class MathSystem {
 
   generateMultiplication() {
     // 乘法：一位數 * 一位數 (1-9 * 1-9) = 1-81
-    const a = Math.floor(Math.random() * 9) + 1; // 1-9
-    const b = Math.floor(Math.random() * 9) + 1; // 1-9
+    const a = Math.floor(Math.random() * DIFFICULTIES[this.difficulty].maxOperand) + 1; // 1-9
+    const b = Math.floor(Math.random() * DIFFICULTIES[this.difficulty].maxOperand) + 1; // 1-9
     return {
       equation: `${a} × ${b} = ?`,
       answer: a * b

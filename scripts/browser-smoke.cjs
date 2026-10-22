@@ -7,16 +7,24 @@ const assert = require('node:assert/strict');
         const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
         const errors = [];
         page.on('pageerror', (error) => errors.push(error.message));
+        // 僅在測試瀏覽器回應中擷取正式引擎，不在產品加入測試掛鉤。
+        await page.route('**/src/logic/GameEngine.js*', async (route) => {
+            const response = await route.fetch();
+            const source = await response.text();
+            await route.fulfill({ response, body: source.replace('constructor(canvas, callbacks) {',
+                'constructor(canvas, callbacks) { window.testEngine = this;') });
+        });
         await page.goto('http://127.0.0.1:43187');
         await page.getByRole('button', { name: '開始任務', exact: true }).waitFor();
-        await page.evaluate(async () => {
-            const { GameEngine } = await import('/src/logic/GameEngine.js');
-            const start = GameEngine.prototype.start;
-            GameEngine.prototype.start = function (...args) {
-                window.testEngine = this;
-                return start.apply(this, args);
-            };
-        });
+        for (const [name, goal, speed] of [['簡單', 250, 0.35], ['中等', 350, 0.5], ['困難', 400, 0.65]]) {
+            await page.getByRole('button', { name, exact: true }).click();
+            assert.ok((await page.locator('.difficulty-summary').textContent()).includes(String(goal)));
+            await page.getByRole('button', { name: '開始任務', exact: true }).click();
+            await page.locator('.hud').waitFor();
+            assert.equal(await page.evaluate(() => window.testEngine.difficulty.baseSpeed), speed);
+            await page.locator('.pause-btn').click();
+            await page.getByRole('button', { name: '離開遊戲', exact: true }).click();
+        }
         await page.getByRole('button', { name: '乘法', exact: true }).click();
         await page.getByRole('button', { name: '困難', exact: true }).click();
         await page.getByRole('button', { name: '開始任務', exact: true }).click();

@@ -6,6 +6,7 @@ import { createI18n } from 'vue-i18n'
  */
 const messages = {
     en: {
+        difficulty_summary: 'Numbers up to {maxOperand} · Goal: {winningScore} points',
         feedback_wrong: ['Try again!', 'Take your time!', 'You can do it!'],
         feedback_correct: ['Great!', 'Good job!', 'Well done!'],
         mute: 'Mute',
@@ -42,6 +43,7 @@ const messages = {
     },
 
     zh: {
+        difficulty_summary: '運算數字上限 {maxOperand} · 目標 {winningScore} 分',
         feedback_wrong: ['再試一次', '慢慢想', '你可以的'],
         feedback_correct: ['好棒', '真厲害', '做得好'],
         mute: '靜音',

@@ -1,3 +1,4 @@
+import { DIFFICULTIES, normalizeSettings, SCORE_PER_KILL } from './GameSettings.js';
 import { MathSystem } from './MathSystem.js';
 import { EntityManager } from './EntityManager.js';
 import { Collision } from './Collision.js';
@@ -14,13 +15,8 @@ export class GameEngine {
     static MIN_SPAWN_INTERVAL = 1000;        // 最小怪物生成間隔 (毫秒)
     static BASE_GAP = 200;                   // 怪物間基礎垂直間距 (像素)
     static MIN_GAP = 90;                     // 怪物間最小垂直間距 (像素)
-    static BASE_SPEED = 0.5;                 // 怪物基礎移動速度
-    static SPEED_INCREMENT = 0.1;            // 每擊殺增加的速度倍率
 
     // === 分數與關卡常數 ===
-    static WINS_SCORE_EASY = 250;            // 簡單難度過關分數
-    static WINS_SCORE_MEDIUM = 350;          // 中等難度過關分數
-    static WINS_SCORE_HARD = 400;            // 困難難度過關分數
     static LEVEL_UP_SCORE = 100;             // 升一等所需分數
 
     // === 子彈常數 ===
@@ -193,17 +189,12 @@ export class GameEngine {
         await this.preloadImages();
         if (sessionId !== this.sessionId) return false;
         
-        const { mode = 'add', difficulty = 'medium' } = settings;
-        this.settings = { mode, difficulty };
-
-        switch (difficulty) {
-            case 'easy': this.winningScore = GameEngine.WINS_SCORE_EASY; break;
-            case 'medium': this.winningScore = GameEngine.WINS_SCORE_MEDIUM; break;
-            case 'hard': this.winningScore = GameEngine.WINS_SCORE_HARD; break;
-            default: this.winningScore = GameEngine.WINS_SCORE_MEDIUM;
-        }
-
+        this.settings = normalizeSettings(settings);
+        const { mode, difficulty } = this.settings;
+        this.difficulty = DIFFICULTIES[difficulty];
+        this.winningScore = this.difficulty.winningScore;
         this.mathSystem.setMode(mode);
+        this.mathSystem.setDifficulty(difficulty);
         if (this.victoryTimer) clearTimeout(this.victoryTimer);
         this.victoryTimer = null;
         this.score = 0;
@@ -356,7 +347,7 @@ export class GameEngine {
         }
 
         // 1. 等級管理
-        if (this.score > this.level * GameEngine.LEVEL_UP_SCORE) {
+        if (this.score >= this.level * GameEngine.LEVEL_UP_SCORE) {
             this.level++;
             // 等級越高生成間隔越短
             this.spawnInterval = Math.max(GameEngine.MIN_SPAWN_INTERVAL, GameEngine.BASE_SPAWN_INTERVAL - (this.level * GameEngine.SPAWN_INTERVAL_DECREMENT));
@@ -375,7 +366,7 @@ export class GameEngine {
 
         // 基礎間隔 ~200px
         // 規則：每擊殺一隻，間隔縮減 1%
-        const kills = Math.floor(this.score / 10);
+        const kills = Math.floor(this.score / SCORE_PER_KILL);
         const baseGap = GameEngine.BASE_GAP;
         const dynamicGap = baseGap * Math.pow(0.99, kills);
         const minGap = Math.max(GameEngine.MIN_GAP, dynamicGap);
@@ -463,8 +454,8 @@ export class GameEngine {
         }
 
         // 速度隨擊殺數增加
-        const kills = Math.floor(this.score / 10);
-        const speed = GameEngine.BASE_SPEED * (1 + GameEngine.SPEED_INCREMENT * kills);
+        const kills = Math.floor(this.score / SCORE_PER_KILL);
+        const speed = this.difficulty.baseSpeed * (1 + this.difficulty.speedIncrement * kills);
 
         this.entityManager.addMonster({
             x: x,
@@ -514,7 +505,7 @@ export class GameEngine {
                     m.alive = false;
                     SoundManager.explosion();
                     this.entityManager.createExplosion(m.x, m.y, m.color);
-                    this.score += 10;
+                    this.score += SCORE_PER_KILL;
                     this.callbacks.onScore(this.score);
                     this.callbacks.onCorrectAnswer && this.callbacks.onCorrectAnswer();
                 }

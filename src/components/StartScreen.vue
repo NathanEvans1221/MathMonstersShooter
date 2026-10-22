@@ -1,7 +1,8 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
-import { toRef } from 'vue'
+import { computed, toRef } from 'vue'
+import { DIFFICULTIES } from '../logic/GameSettings.js'
 import { preferences } from '../logic/Preferences.js'
 
 /**
@@ -19,6 +20,7 @@ const { locale, t } = useI18n()
 const version = __APP_VERSION__ // 從 Vite 配置中注入的應用程式版本號
 
 const selectedMode = toRef(preferences, 'mode')
+const difficultyInfo = computed(() => DIFFICULTIES[selectedDifficulty.value])
 const selectedDifficulty = toRef(preferences, 'difficulty') // default to medium (350) based on PRD
 
 /**
@@ -96,6 +98,7 @@ const onStart = () => {
         </div>
     </div>
 
+    <p class="difficulty-summary">{{ t('difficulty_summary', difficultyInfo) }}</p>
     <button class="neon-button start-btn" @click="onStart">{{ $t('start') }}</button>
     <div class="version">v{{ version }}</div>
   </div>
