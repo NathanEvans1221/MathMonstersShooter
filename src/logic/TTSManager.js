@@ -1,40 +1,54 @@
-/**
- * 語音合成管理器 (TTS)
- * 負責將文字轉換為語音，用於按鈕提示或遊戲反饋
- */
+/** 單一語音與一筆最新待播內容，避免鼓勵語打斷答案或堆積。 */
 export class TTSManager {
-    static enabled = true; // 是否啟用語音功能
+    static enabled = true
+    static active = null
+    static pending = null
+    static generation = 0
 
-    /**
-     * 設定語音啟用狀態
-     * @param {boolean} val - 是否啟用
-     */
-    static setEnabled(val) {
-        this.enabled = val;
-        if (!val) window.speechSynthesis.cancel(); // 停用時立即取消正在播放的語音
+    static clear() {
+        this.generation++
+        this.active = null
+        this.pending = null
+        globalThis.window?.speechSynthesis?.cancel()
     }
 
-    /**
-     * 播放語音
-     * @param {string} text - 要播放的文字內容
-     * @param {string} locale - 語言標記 ('zh' 或 'en')
-     */
-    static speak(text, locale) {
-        if (!this.enabled || !window.speechSynthesis) return;
+    static setEnabled(value) {
+        this.enabled = value
+        if (!value) this.clear()
+    }
 
-        // 取消之前的語音以避免重疊
-        window.speechSynthesis.cancel();
+    /** result > navigation > number > feedback。 */
+    static speak(text, locale, kind = 'navigation') {
+        const synth = globalThis.window?.speechSynthesis
+        if (!this.enabled || !synth || !globalThis.SpeechSynthesisUtterance) return
+        const priority = { feedback: 0, number: 1, navigation: 2, result: 3 }[kind] ?? 0
+        const request = { text, locale, priority, expires: performance.now() + 2000 }
+        if (this.active && priority <= this.active.priority) {
+            if (!this.pending || priority >= this.pending.priority) this.pending = request
+            return
+        }
+        this.clear()
+        this.play(request)
+    }
 
-        const utterance = new SpeechSynthesisUtterance(text);
-
-        // 將語系對應到瀏覽器標準格式
-        utterance.lang = locale === 'zh' ? 'zh-TW' : 'en-US';
-
-        // 調整語速與音調，使聲音對小朋友更親切且符合遊戲節奏
-        utterance.rate = 1.5; // 稍快的語速以匹配遊戲節奏
-        utterance.pitch = 1.1; // 稍高的音調增加親和力
-
-        window.speechSynthesis.speak(utterance);
+    static play(request) {
+        const synth = globalThis.window?.speechSynthesis
+        if (!this.enabled || !synth || request.expires < performance.now()) return
+        const generation = ++this.generation
+        const utterance = new SpeechSynthesisUtterance(request.text)
+        utterance.lang = request.locale === 'zh' ? 'zh-TW' : 'en-US'
+        utterance.rate = 1.5
+        utterance.pitch = 1.1
+        this.active = request
+        const finished = () => {
+            if (generation !== this.generation) return
+            this.active = null
+            const pending = this.pending
+            this.pending = null
+            if (pending) this.play(pending)
+        }
+        utterance.onend = finished
+        utterance.onerror = finished
+        try { synth.speak(utterance) } catch { finished() }
     }
 }
-

@@ -11,7 +11,7 @@ import { SoundManager } from './logic/SoundManager.js'
 import { preferences, readHighScore, saveHighScore } from './logic/Preferences.js'
 import { InputController } from './logic/InputController.js'
 
-const { t, locale } = useI18n()
+const { t, tm, locale } = useI18n()
 locale.value = preferences.locale
 watch(locale, value => { preferences.locale = value })
 watch(() => preferences.muted, value => {
@@ -71,6 +71,7 @@ const onResumeClick = () => {
  * 處理「離開遊戲」回到主畫面
  */
 const onExitClick = () => {
+    TTSManager.clear()
     speak('exit')
     gameState.value = 'start'
 
@@ -110,7 +111,7 @@ onMounted(() => {
         getState: () => gameState.value,
         getOptions: () => currentOptions.value,
         onAnswer: (value) => {
-            TTSManager.speak(String(value), locale.value)
+            TTSManager.speak(String(value), locale.value, 'number')
             handleAnswer(value)
         },
         onPause
@@ -121,6 +122,7 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener('click', handleInteraction);
     inputController?.stop()
+    TTSManager.clear()
     SoundManager.stopBGM()
 })
 
@@ -151,9 +153,9 @@ const onGameOver = (finalScore, winStatus = false) => {
 
     // 語音宣告結果
     if (winStatus) {
-        TTSManager.speak(t('you_win'), locale.value)
+        TTSManager.speak(t('you_win'), locale.value, 'result')
     } else {
-        TTSManager.speak(t('game_over'), locale.value)
+        TTSManager.speak(t('game_over'), locale.value, 'result')
     }
 }
 
@@ -161,19 +163,8 @@ const onGameOver = (finalScore, winStatus = false) => {
  * 答錯時的處理：播放隨機鼓勵語句並觸發畫面震動
  */
 const onWrong = () => {
-    // 隨機失敗鼓勵語句
-    const phrases = ['差一點', '錯了', '不對唷', '唉', '怎麼可能'];
-    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-
-    if (locale.value === 'zh') {
-        TTSManager.speak(randomPhrase, 'zh');
-    } else {
-        const enPhrases = ['Almost!', 'Wrong!', 'Not right!', 'Oh no!', 'Impossible!'];
-        const idx = phrases.indexOf(randomPhrase);
-        TTSManager.speak(enPhrases[idx > -1 ? idx : 0], 'en');
-    }
-
-    // 觸發畫面整體的震動特效
+    const phrases = tm('feedback_wrong')
+    TTSManager.speak(phrases[Math.floor(Math.random() * phrases.length)], locale.value, 'feedback')
     const el = document.getElementById('app-container');
     if(el) {
         el.classList.add('shake')
@@ -185,17 +176,8 @@ const onWrong = () => {
  * 答對時的處理：播放隨機讚美語句
  */
 const onCorrect = () => {
-    // 隨機讚美語句
-    const praises = ['好棒', '讚', '真厲害', '完美', '一百分'];
-    const randomPraise = praises[Math.floor(Math.random() * praises.length)];
-
-    if (locale.value === 'zh') {
-        TTSManager.speak(randomPraise, 'zh');
-    } else {
-        const enPraises = ['Great!', 'Good job!', 'Awesome!', 'Perfect!', 'One hundred percent!'];
-        const idx = praises.indexOf(randomPraise);
-        TTSManager.speak(enPraises[idx > -1 ? idx : 0], 'en');
-    }
+    const phrases = tm('feedback_correct')
+    TTSManager.speak(phrases[Math.floor(Math.random() * phrases.length)], locale.value, 'feedback')
 }
 
 /**

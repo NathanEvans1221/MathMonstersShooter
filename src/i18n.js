@@ -6,6 +6,8 @@ import { createI18n } from 'vue-i18n'
  */
 const messages = {
     en: {
+        feedback_wrong: ['Try again!', 'Take your time!', 'You can do it!'],
+        feedback_correct: ['Great!', 'Good job!', 'Well done!'],
         mute: 'Mute',
         unmute: 'Unmute',
         title: 'MATH MONSTERS',
@@ -40,6 +42,8 @@ const messages = {
     },
 
     zh: {
+        feedback_wrong: ['再試一次', '慢慢想', '你可以的'],
+        feedback_correct: ['好棒', '真厲害', '做得好'],
         mute: '靜音',
         unmute: '開啟聲音',
         title: '數學怪物',

@@ -22,7 +22,7 @@ const { locale } = useI18n()
  */
 const onAnswerClick = (opt) => {
     // 點擊時同步使用語音報數 (幫助聽覺記憶)
-    TTSManager.speak(opt.toString(), locale.value)
+    TTSManager.speak(opt.toString(), locale.value, 'number')
     
     // 通知父組件進行後續邏輯 (如判斷是否正確、開火等)
     emit('answer', opt)
