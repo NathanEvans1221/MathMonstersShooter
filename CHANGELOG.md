@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- 建立 Node 內建測試指令與九項出題、碰撞、計分、勝敗及時停測試（#9）。
+- 記錄十項優化的執行順序、玩法參數與逐項交付驗證計畫。
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
