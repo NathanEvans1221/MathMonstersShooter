@@ -6,6 +6,8 @@ import { createI18n } from 'vue-i18n'
  */
 const messages = {
     en: {
+        mission_progress: 'Mission progress',
+        remaining_monsters: '{count} more monsters to win',
         difficulty_summary: 'Numbers up to {maxOperand} · Goal: {winningScore} points',
         feedback_wrong: ['Try again!', 'Take your time!', 'You can do it!'],
         feedback_correct: ['Great!', 'Good job!', 'Well done!'],
@@ -43,6 +45,8 @@ const messages = {
     },
 
     zh: {
+        mission_progress: '過關進度',
+        remaining_monsters: '再擊退 {count} 隻就過關',
         difficulty_summary: '運算數字上限 {maxOperand} · 目標 {winningScore} 分',
         feedback_wrong: ['再試一次', '慢慢想', '你可以的'],
         feedback_correct: ['好棒', '真厲害', '做得好'],

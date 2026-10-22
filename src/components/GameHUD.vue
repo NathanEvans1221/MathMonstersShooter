@@ -1,5 +1,6 @@
 <script setup>
-import { toRef } from 'vue'
+import { computed, toRef } from 'vue'
+import { getProgress } from '../logic/Progress.js'
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
 import { preferences } from '../logic/Preferences.js'
@@ -9,6 +10,7 @@ import { preferences } from '../logic/Preferences.js'
  * 負責在遊戲畫面上方疊加 UI，顯示分數、生命值、靜音與暫停按鈕
  */
 const props = defineProps({
+  targetScore: Number,
   score: Number, // 當前分數
   lives: Number  // 剩餘生命
 })
@@ -16,6 +18,7 @@ const props = defineProps({
 const emit = defineEmits(['pause']) // 發送暫停事件
 const { t, locale } = useI18n()
 const isMuted = toRef(preferences, 'muted')
+const progress = computed(() => getProgress(props.score, props.targetScore))
 
 /**
  * 切換靜音狀態 (同步控制 BGM 與 TTS)
@@ -43,6 +46,10 @@ const onPauseClick = () => {
         <div class="score">{{ $t('score') }} <span class="val">{{ score }}</span></div>
     </div>
 
+    <div class="mission-progress">
+        <progress :value="progress.percent" max="100" :aria-label="t('mission_progress')" />
+        <span>{{ t('remaining_monsters', { count: progress.remaining }) }}</span>
+    </div>
     <div class="lives-container">
         <button class="pause-btn" :aria-label="t('paused')" @click="onPauseClick">⏸</button>
         <div class="lives">
@@ -54,6 +61,17 @@ const onPauseClick = () => {
 </template>
 
 <style scoped>
+.mission-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    max-width: 95%;
+}
+.mission-progress progress {
+    width: clamp(4rem, 20vw, 8rem);
+    accent-color: var(--primary-color);
+}
 .hud {
   position: absolute;
   top: 20px;

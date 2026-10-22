@@ -22,6 +22,7 @@ const assert = require('node:assert/strict');
             await page.getByRole('button', { name: '開始任務', exact: true }).click();
             await page.locator('.hud').waitFor();
             assert.equal(await page.evaluate(() => window.testEngine.difficulty.baseSpeed), speed);
+            assert.ok((await page.locator('.mission-progress').textContent()).includes(String(goal / 10)));
             await page.locator('.pause-btn').click();
             await page.getByRole('button', { name: '離開遊戲', exact: true }).click();
         }
@@ -59,6 +60,10 @@ const assert = require('node:assert/strict');
         assert.equal(await page.evaluate(() => window.testEngine.frameId), null);
         await page.setViewportSize({ width: 375, height: 667 });
         assert.ok(await page.locator('.start-btn').isVisible());
+        await page.locator('.start-btn').click();
+        await page.locator('.hud').waitFor();
+        const progressBox = await page.locator('.mission-progress').boundingBox();
+        assert.ok(progressBox.x >= 0 && progressBox.x + progressBox.width <= 375);
         assert.deepEqual(errors, []);
         console.log('PASS: 桌面開始、三次暫停恢復、勝利、保留設定重試、離開與手機尺寸首頁；無頁面錯誤。');
     } finally {

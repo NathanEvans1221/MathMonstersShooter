@@ -10,6 +10,8 @@ import { SoundManager } from './logic/SoundManager.js'
 
 import { preferences, readHighScore, saveHighScore } from './logic/Preferences.js'
 import { InputController } from './logic/InputController.js'
+import { DIFFICULTIES, normalizeSettings } from './logic/GameSettings.js'
+const currentSettings = ref(normalizeSettings(preferences))
 
 const { t, tm, locale } = useI18n()
 locale.value = preferences.locale
@@ -42,6 +44,7 @@ const speak = (key) => {
  * 開始或重新開始遊戲
  */
 const startGame = async (settings) => {
+    if (settings) currentSettings.value = normalizeSettings(settings)
     gameState.value = 'loading'
     score.value = 0
     lives.value = 3
@@ -217,7 +220,8 @@ const resumeGame = () => {
     <p v-if="gameState === 'loading'" class="loading" role="status">{{ t('loading') }}</p><StartScreen v-if="gameState === 'start'" :high-score="highScore" @start="onStartClick" />
 
     <div v-if="gameState === 'playing'">
-        <GameHUD :score="score" :lives="lives" @pause="onPause" />
+        <GameHUD :score="score" :lives="lives"
+            :target-score="DIFFICULTIES[currentSettings.difficulty].winningScore" @pause="onPause" />
         <AnswerPanel :options="currentOptions" @answer="handleAnswer" />
     </div>
 
