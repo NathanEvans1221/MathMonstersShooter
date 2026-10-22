@@ -34,7 +34,8 @@
 | `npm run preview` | 預覽建置後的成品 |
 
 ### 測試
-本專案目前**尚未配置**單元測試框架。如有需要，可引入 Vitest 或 Jest。
+使用 Node.js 內建測試工具，執行 `npm.cmd test`。測試位於 `tests/`，不依賴真實音訊。
+瀏覽器驗證方式與限制見 `docs/verification/README.md`。
 
 ### Linting
 本專案目前**尚未配置** ESLint 或 Prettier。如有需要，可引入相關工具。

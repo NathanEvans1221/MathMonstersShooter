@@ -1,110 +1,99 @@
-# Math Monsters Shooter (數學怪物射手) 🚀
+# Math Monsters Shooter（數學怪物射手）
 
-## 📖 專案概述 (Project Overview)
-這是一個結合數學教育與射擊遊戲的瀏覽器應用程式。玩家駕駛飛船，透過計算數學題目來發射子彈，擊退不斷來襲的數字怪物。目標是提供國小低年級學生一個充滿趣味的計算練習環境。
+供國小低年級練習加減乘法的瀏覽器遊戲。選答案發射子彈，透過射擊闖關或十題練習獲得即時回饋。
 
-## 🎮 遊戲模式 (Game Modes)
-玩家可於首頁選擇以下三種運算模式：
-| 模式 | 題目範圍 | 答案範圍 |
-|------|----------|----------|
-| ➕ **加法** | 一位數 + 一位數 (0-9 + 0-9) | 0-18 |
-| ➖ **減法** | 被減數 1-18，減數 0-9 | 0-9 (非負一位數) |
-| ✖️ **乘法** | 一位數 × 一位數 (1-9 × 1-9) | 1-81 |
+![遊戲畫面](./images/math-monsters-shooter.png)
 
-## ⭐ 難度選擇 (Difficulty Levels)
-玩家可於首頁選擇以下三種難度：
-| 難度 | 過關分數 |
-|------|----------|
-| 🔥 **困難** | 400 分 |
-| ⚡ **中等** | 350 分 |
-| 🌱 **簡單** | 200 分 |
+## 啟動與驗證
 
-## 🕹️ 試玩網址
-https://math-monsters-shooter.liawchiisen.workers.dev/
+需要符合 Vite 7 要求的 Node.js（20.19+ 或 22.12+），本輪使用 Node 24。
 
-![math-monsters-shooter](./images/math-monsters-shooter.png)
-
-## 🛠 技術架構 (Technical Stack)
-- **Core Framework**: Vue 3 + Vite
-- **Rendering**: HTML5 Canvas (用於高效能粒子與遊戲渲染)
-- **Styling**: Vanilla CSS (Neon Space 風格)
-- **Audio**: Web Audio API (零依賴音效)
-- **State Management**: Vue Reactivity API
-
-## 🏗 模組架構 (Architecture)
-
-### 核心邏輯 (src/logic/)
-- **GameEngine.js**: 遊戲核心驅動器。負責處理 Canvas 的繪圖循環 (RequestAnimationFrame)、管理遊戲階段轉換、怪物生成時間控制、以及全局減速特效等核心遊戲邏輯。
-- **EntityManager.js**: 實體管理器。負責追蹤並更新畫面上的所有動態實體（包括玩家、怪物、子彈與粒子），並處理實體超出邊界後的清理工作，是維持高效能渲染的關鍵。
-- **MathSystem.js**: 數學題目生成系統。專為國小一年級程度設計，能產生總和 20 以內的加法或被減數 20 以內的減法題目，並智慧生成接近正確答案的干擾選項。
-- **Collision.js**: 碰撞偵測系統。封裝了圓形碰撞、點與圓形碰撞的數學運算，確保射擊與目標互動的準確性。
-- **SoundManager.js**: 音效與音樂管理器。基於 Web Audio API 實現程序化音效合成，無需加載外部音檔即可產生豐富的射擊、爆炸及動態背景音樂。
-- **TTSManager.js**: 語音合成管理器。整合瀏覽器原生 Speech Synthesis 技術，為遊戲提供即時的語音讀數與心理建設鼓勵語句。
-
-### 應用程式入口與配置 (src/)
-- **App.vue**: 應用程式主容器與中央狀態機。協調全域遊戲狀態、管理得分與生命值邏輯、處理 TTS 播放排程，並作為所有子組件的通訊中樞。
-- **main.js**: 應用程式啟動入口。負責初始化 Vue 應用環境、註冊 i18n 多國語言插件。
-- **i18n.js**: 國際化設定檔。定義了中英文雙語的介面文本、語系切換規則，支援動態語系更迭。
-
-### UI 組件 (src/components/)
-- **GameCanvas.vue**: 遊戲渲染組件。將純 JS 寫寫的遊戲引擎嵌入 Vue 生態系，負責 Canvas 的 DOM 生命週期、視窗縮放適配（Resize）以及引擎啟動/暫停。
-- **GameHUD.vue**: 抬頭顯示資訊層。負責在遊戲畫面頂部穩定顯示即時分數、生命心形圖標，並整合了全局靜音切換與暫停按鈕，具備極高的 Z-index 層級。
-- **AnswerPanel.vue**: 互動答案面板。動態生成浮動在畫面底部的數字按鈕，支援觸控與語音反饋，是玩家進行答題的核心操作介面。
-- **StartScreen.vue**: 視覺與引導入口。展示遊戲標題與設定介面（如語言切換），並提供流暢的遊戲開始切換動畫。
-
-## 🎨 視覺風格 (Visual Aesthetics)
-- **Theme**: Neon Space (霓虹太空)
-- **Palette**: Deep Space Blue (#0B0F29) 背景，搭配 Neon Cyan (#00F3FF) 與 Magenta (#FF00FF) 強調色。
-- **Effects**: 粒子爆炸、光暈 (Glow)、毛玻璃 (Glassmorphism) UI。
-
-## ✅ 實作計畫 (Implementation Plan)
-
-### Phase 1: Initialization & Foundation
-- [x] 初始化 Vue 3 + Vite 專案
-- [x] 設定基礎 CSS 變數 (Design Tokens) 與全域樣式
-- [x] 建立專案目錄結構 (logic, components, assets)
-
-### Phase 2: Core Logic Implementation
-- [x] 實作 `MathSystem.js` (題目生成邏輯)
-- [x] 實作 `GameEngine.js` (基礎 Loop 與 Canvas setup)
-- [x] 實作 `EntityManager.js` (怪物生成與移動)
-
-### Phase 3: UI & Interaction
-- [x] 建立 `GameCanvas.vue` 整合 Canvas
-- [x] 建立 `AnswerPanel.vue` (底部互動按鈕)
-- [x] 串接射擊邏輯與碰撞偵測
-
-### Phase 4: Polish & Effects
-- [x] 加入粒子爆炸與發光特效
-- [x] 加入音效處理 (Web Audio API)
-- [x] 優化 UI 動畫與轉場 (Start Screen, Game Over)
-
-
-## 🛠️ 字型優化與維護 (Font Optimization)
-
-為了提升網頁載入速度，我們將 13MB 的 `ZhuyinFont.ttf` 透過子集化壓縮至 50KB 左右的 `ZhuyinFont.woff2`。當有新增中文翻譯時，請務必重新執行此流程。
-
-### 子集化內容來源 (Charset Sources)
-1.  **基礎英數與符號 (Basic ASCII & Math Symbols)**: `A-Z a-z 0-9 + - * / = ? : . % !`
-2.  **注音符號 (Bopomofo)**: `U+3100-312F` 完整區段
-3.  **UI 中文文本 (From src/i18n.js)**: 遊戲介面用字
-
-#### 完整字元清單 (Copy This):
-```text
-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-*/=?:.%! ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦˊˇˋ˙數學怪物射擊手心算戰鬥機開始任務得分生命等待目標遊戲結束最終分數重新載入中暫停繼續離開恭喜你破關差一點錯了不對唷唉怎麼可能好棒讚真厲害完美百一模式難度加法減法乘法簡單中等困難
+```powershell
+npm.cmd ci
+npm.cmd run dev -- --host 127.0.0.1 --port 43187
+npm.cmd test
+npm.cmd run build
+npm.cmd run preview
 ```
 
-### 更新流程 (Update Workflow)
-1.  **準備**: 複製上方的「完整字元清單」。若有新增 UI 文字，請手動加入清單中。
-2.  **工具**: 前往 [Transfonter.org](https://transfonter.org/)
-3.  **設定**:
-    *   **Add fonts**: 上傳 `public/fonts/ZhuyinFont.ttf`
-    *   **Subsets**: **全部取消勾選 (None)** (避免混入無用字元)
-    *   **Characters**: 貼上剛才的「完整字元清單」
-    *   **Formats**: 勾選 `WOFF2`
-4.  **轉換**: 點擊 `Convert` -> `Download`
-5.  **替換**: 將下載後的 `.woff2` 檔案重新命名為 `ZhuyinFont.woff2` 並覆蓋專案中的 `public/fonts/ZhuyinFont.woff2`。
+- `npm test`：Node 內建測試，無額外測試框架；目前 30 項。
+- `npm run build`：輸出至 `dist/`。
+- 尚未配置 Lint 指令或 CI 工作流程。
+- Windows 若 5173 埠無法監聽，可採上述 43187 埠。
 
----
-*Created by Antigravity Assistant*
-Math Monsters Shooter 國小一年級加減法遊戲練習
+## 玩法
+
+| 難度 | 運算元／減法答案與減數上限 | 下降初速 | 每次擊殺加速係數 | 闖關目標 |
+|---|---:|---:|---:|---:|
+| 簡單 | 5 | 0.35 | 0.06 | 250 分 |
+| 中等 | 9 | 0.5 | 0.08 | 350 分 |
+| 困難 | 9 | 0.65 | 0.10 | 400 分 |
+
+速度單位以 60fps 基準換算；新怪物速度為初速 ×（1 + 係數 × 累積擊殺數）。
+加法運算元從 0 開始；乘法從 1 開始。減法先產生非負答案與減數，再相加得到被減數，
+因此被減數可以是 0，簡單模式最多 10，中等／困難最多 18。
+
+**射擊闖關**：三條生命，擊殺加 10 分，漏怪扣一條生命；答錯不扣命，怪物減速五秒。
+連續答錯額外減速，同題連錯兩次顯示解題提示。每達 100 分門檻，怪物減速 20% 五秒。
+畫面最多五隻怪物；有子彈飛行時怪物暫停移動，期間不接受其他答案。
+
+**十題練習**：一次一題，共十題。答錯仍可嘗試，擊殺或漏題後進入下一題；漏題不提前結束。
+摘要顯示最終解出的題數、首次作答正確率與待複習題目。首次正確率以十題為分母，
+未作答的漏題也算未答對；答錯後修正不會增加首次正確率。練習結果不寫入闖關最高分。
+
+## 操作與偏好
+
+- 點擊／觸控答案；桌面也可按 `1`、`2`、`3` 選擇由左至右的答案。
+- 支援暫停、恢復、退出與保留原設定重試。
+- 切到背景會自動暫停，回來後由玩家手動繼續。
+- 語言、靜音、運算模式、難度及闖關最高分保存在本機 `localStorage`。
+- 儲存被封鎖時以當次記憶體狀態運作；不需登入，沒有後端或資料庫。
+- 支援繁體中文與英文，音效使用 Web Audio，朗讀使用 Speech Synthesis。
+  發聲需符合瀏覽器互動政策，語音與音色依裝置而異。
+
+## 架構
+
+| 位置 | 職責 |
+|---|---|
+| `src/App.vue` | 畫面狀態、音訊偏好、最高分、摘要與鍵盤生命週期 |
+| `src/components/GameCanvas.vue` | 引擎與 Vue 橋接、尺寸／字型監聽與卸載清理 |
+| `src/logic/GameEngine.js` | 單一 RAF 循環、出怪、答題、碰撞、勝敗與局次保護 |
+| `EntityManager.js`、`Collision.js` | 實體移動、粒子及圓形碰撞 |
+| `GameSettings.js`、`MathSystem.js`、`MathHints.js` | 共用難度、出題及學習提示 |
+| `PracticeSession.js` | 十題作答、首次正確率與複習紀錄 |
+| `Preferences.js`、`InputController.js`、`Progress.js` | 儲存降級、操作與進度計算 |
+| `SoundManager.js`、`TTSManager.js` | 合成音效、背景音樂與有優先序的語音 |
+
+技術棧為 Vue 3、vue-i18n、Vite 7、JavaScript、Canvas 與原生 CSS。
+版本從 `package.json` 注入首頁，不另硬編碼。
+
+## 瀏覽器驗證
+
+測試腳本使用 Playwright 與本機 Edge，需先在 43187 埠啟動開發伺服器。
+Playwright 不屬於正式遊戲依賴；若環境未提供，可另外安裝：
+
+```powershell
+npm.cmd install --no-save --package-lock=false playwright
+node scripts/browser-smoke.cjs
+node scripts/benchmark.cjs
+```
+
+若環境已提供 Playwright，可將 `PLAYWRIGHT_MODULE_PATH` 設成其套件目錄。
+腳本只在測試瀏覽器攔截的模組回應中擷取引擎，不在產品程式加入測試掛鉤。
+
+完整驗證範圍與限制見 [驗證紀錄](docs/verification/README.md)，
+效能量測見 [效能紀錄](docs/verification/performance.md)。
+
+## 部署與限制
+
+`wrangler.json` 將 `dist/` 設為 Cloudflare Workers 靜態資產目錄。先建置，再以已安裝且完成
+授權的 Wrangler 執行 `wrangler deploy`。本輪僅推送原始碼，未執行部署。
+
+[既有展示連結](https://math-monsters-shooter.liawchiisen.workers.dev/) 未驗證是否已包含本輪修改。
+尚未實作 PWA／Service Worker，首次離線開啟及離線重新載入沒有保證。
+
+注音字型位於 `public/fonts/ZhuyinFont.woff2`，為子集字型；新增中文時需檢查缺字。
+若持有原始 TTF，可依 UI 用字重新產生 WOFF2 子集；原始 TTF 目前不在此儲存庫。
+新摘要使用系統字型以維持閱讀清晰度。
+
+詳細現行規則與未實作項目見 [PRD](PRD.md)，維護建議見 [OPTIMIZATION](OPTIMIZATION.md)。
