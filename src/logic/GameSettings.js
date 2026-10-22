@@ -7,6 +7,7 @@ export const DIFFICULTIES = Object.freeze({
 
 export function normalizeSettings(settings = {}) {
     return {
+        sessionType: settings?.sessionType === 'practice' ? 'practice' : 'arcade',
         mode: ['add', 'sub', 'mul'].includes(settings?.mode) ? settings.mode : 'add',
         difficulty: Object.hasOwn(DIFFICULTIES, settings?.difficulty)
             ? settings.difficulty : 'medium'

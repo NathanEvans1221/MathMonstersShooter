@@ -11,6 +11,7 @@ import { preferences } from '../logic/Preferences.js'
  */
 const props = defineProps({
   targetScore: Number,
+  practiceProgress: Object,
   score: Number, // 當前分數
   lives: Number  // 剩餘生命
 })
@@ -18,7 +19,9 @@ const props = defineProps({
 const emit = defineEmits(['pause']) // 發送暫停事件
 const { t, locale } = useI18n()
 const isMuted = toRef(preferences, 'muted')
-const progress = computed(() => getProgress(props.score, props.targetScore))
+const progress = computed(() => props.practiceProgress
+    ? getProgress(props.practiceProgress.completed * 10, props.practiceProgress.total * 10)
+    : getProgress(props.score, props.targetScore))
 
 /**
  * 切換靜音狀態 (同步控制 BGM 與 TTS)
@@ -48,11 +51,12 @@ const onPauseClick = () => {
 
     <div class="mission-progress">
         <progress :value="progress.percent" max="100" :aria-label="t('mission_progress')" />
-        <span>{{ t('remaining_monsters', { count: progress.remaining }) }}</span>
+        <span v-if="practiceProgress">{{ t('practice_progress', practiceProgress) }}</span>
+        <span v-else>{{ t('remaining_monsters', { count: progress.remaining }) }}</span>
     </div>
     <div class="lives-container">
         <button class="pause-btn" :aria-label="t('paused')" @click="onPauseClick">⏸</button>
-        <div class="lives">
+        <div v-if="!practiceProgress" class="lives">
         {{ $t('lives') }}
         <span v-for="n in lives" :key="n" class="heart">❤️</span>
         </div>

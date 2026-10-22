@@ -5,6 +5,7 @@ import GameCanvas from './components/GameCanvas.vue'
 import GameHUD from './components/GameHUD.vue'
 import AnswerPanel from './components/AnswerPanel.vue'
 import StartScreen from './components/StartScreen.vue'
+import PracticeSummary from './components/PracticeSummary.vue'
 import { TTSManager } from './logic/TTSManager.js'
 import { SoundManager } from './logic/SoundManager.js'
 
@@ -13,6 +14,8 @@ import { InputController } from './logic/InputController.js'
 import { DIFFICULTIES, normalizeSettings } from './logic/GameSettings.js'
 const currentSettings = ref(normalizeSettings(preferences))
 const currentHint = ref(null)
+const practiceProgress = ref(null)
+const practiceSummary = ref(null)
 
 const { t, tm, locale } = useI18n()
 locale.value = preferences.locale
@@ -45,6 +48,7 @@ const speak = (key) => {
  * 開始或重新開始遊戲
  */
 const startGame = async (settings) => {
+    practiceSummary.value = null
     if (settings) currentSettings.value = normalizeSettings(settings)
     gameState.value = 'loading'
     score.value = 0
@@ -141,13 +145,14 @@ const onOptions = (opts) => currentOptions.value = opts
  * @param {number} finalScore - 最終分數
  * @param {boolean} winStatus - 是否勝利
  */
-const onGameOver = (finalScore, winStatus = false) => {
+const onGameOver = (finalScore, winStatus = false, summary = null) => {
+    practiceSummary.value = summary
     score.value = finalScore
     isWin.value = winStatus
     gameState.value = 'gameover'
 
     // 檢查並更新最高分數
-    if (finalScore > highScore.value) {
+    if (!summary && finalScore > highScore.value) {
         highScore.value = finalScore
         isNewRecord.value = true
         saveHighScore(finalScore)
@@ -157,7 +162,7 @@ const onGameOver = (finalScore, winStatus = false) => {
 
     // 語音宣告結果
     if (winStatus) {
-        TTSManager.speak(t('you_win'), locale.value, 'result')
+        TTSManager.speak(t(summary ? 'practice_complete' : 'you_win'), locale.value, 'result')
     } else {
         TTSManager.speak(t('game_over'), locale.value, 'result')
     }
@@ -217,24 +222,28 @@ const resumeGame = () => {
         @wrong="onWrong"
         @correct="onCorrect"
         @hint="currentHint = $event"
+        @practice="practiceProgress = $event"
     />
 
     <p v-if="gameState === 'loading'" class="loading" role="status">{{ t('loading') }}</p><StartScreen v-if="gameState === 'start'" :high-score="highScore" @start="onStartClick" />
 
     <div v-if="gameState === 'playing'">
         <GameHUD :score="score" :lives="lives"
+            :practice-progress="practiceProgress"
             :target-score="DIFFICULTIES[currentSettings.difficulty].winningScore" @pause="onPause" />
         <AnswerPanel :options="currentOptions" :hint="currentHint" @answer="handleAnswer" />
     </div>
 
     <div v-if="gameState === 'gameover'" class="gameover-screen glass" :class="{ win: isWin }">
         <h1 class="neon-text" :style="{color: isWin ? '#00ff99' : '#ff3366'}">
-            {{ isWin ? $t('you_win') : $t('game_over') }}
+            {{ practiceSummary ? t('practice_complete') : isWin ? t('you_win') : t('game_over') }}
         </h1>
-        <h2>{{ $t('final_score') }} {{ score }}</h2>
+        <PracticeSummary v-if="practiceSummary" :summary="practiceSummary" />
+        <h2 v-else>{{ $t('final_score') }} {{ score }}</h2>
         <p v-if="isNewRecord" class="new-record">{{ $t('new_record') }}</p>
-        <p class="high-score">{{ $t('high_score') }} {{ highScore }}</p>
+        <p v-if="!practiceSummary" class="high-score">{{ $t('high_score') }} {{ highScore }}</p>
         <button class="neon-button" @click="onRetryClick">{{ $t('retry') }}</button>
+        <button class="neon-button exit-result" @click="onExitClick">{{ $t('exit') }}</button>
     </div>
 
     <!-- Pause Menu -->
@@ -248,6 +257,13 @@ const resumeGame = () => {
 </template>
 
 <style scoped>
+.loading {
+    position: absolute;
+    top: 45%;
+    width: 100%;
+    text-align: center;
+}
+.exit-result { margin-top: 0.75rem; }
 #app-container {
     width: 100vw;
     height: 100vh;
@@ -271,6 +287,9 @@ const resumeGame = () => {
 }
 
 .gameover-screen.win {
+    box-sizing: border-box;
+    padding: 1rem;
+    overflow-y: auto;
     width: 100vw;
     height: 100vh;
     max-width: none;
@@ -396,5 +415,11 @@ const resumeGame = () => {
   font-size: 2rem;
   margin-bottom: 2rem;
   color: var(--primary-color);
+}
+@media (max-width: 600px) {
+    .gameover-screen.win h1 { font-size: 2rem; }
+    .gameover-screen.win h2 { font-size: 1.5rem; }
+    .gameover-screen.win .neon-button { font-size: 1rem; padding: 0.5rem 1.5rem; }
+    .gameover-screen.win .high-score { margin-bottom: 1rem; }
 }
 </style>

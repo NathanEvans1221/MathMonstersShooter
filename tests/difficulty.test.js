@@ -31,7 +31,7 @@ test('難度同時影響初速與通關，無效設定採預設', async (t) => {
     }
     assert.deepEqual(speeds, [0.35, 0.5, 0.65])
     await engine.start({ mode: 'bad', difficulty: 'bad' })
-    assert.deepEqual(engine.settings, { mode: 'add', difficulty: 'medium' })
+    assert.deepEqual(engine.settings, { sessionType: 'arcade', mode: 'add', difficulty: 'medium' })
 })
 
 test('達到一百分整數門檻就觸發喘息，不必等到一百一十分', async (t) => {

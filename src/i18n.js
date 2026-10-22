@@ -6,6 +6,16 @@ import { createI18n } from 'vue-i18n'
  */
 const messages = {
     en: {
+        session_type: 'Play style',
+        sessions: { arcade: 'Arcade mission', practice: '10-question practice' },
+        practice_description: 'Ten questions, one at a time. Missed questions go into your review.',
+        practice_complete: 'Practice complete!',
+        practice_progress: '{completed} / {total} completed',
+        practice_correct: 'Solved: {count} / {total}',
+        practice_accuracy: 'First-answer accuracy: {percent}%',
+        practice_review: 'Questions to review',
+        review_answer: '(Answer: {answer})',
+        practice_perfect: 'All correct on your first try!',
         hint_make_ten: 'Make ten first: {expression}',
         hint_add: 'Start at {a}, then count forward {b} steps.',
         hint_sub: 'Start at {a}, then count back {b} steps.',
@@ -49,6 +59,16 @@ const messages = {
     },
 
     zh: {
+        session_type: '遊玩方式',
+        sessions: { arcade: '射擊闖關', practice: '十題練習' },
+        practice_description: '一次一題，共十題；漏題會列入複習，不會提早結束。',
+        practice_complete: '練習完成！',
+        practice_progress: '已完成 {completed} / {total} 題',
+        practice_correct: '答對 {count} / {total} 題',
+        practice_accuracy: '首次作答正確率：{percent}%',
+        practice_review: '待複習題目',
+        review_answer: '（答案：{answer}）',
+        practice_perfect: '每一題都一次答對，好棒！',
         hint_make_ten: '先湊成十：{expression}',
         hint_add: '從 {a} 開始，往後數 {b} 步。',
         hint_sub: '從 {a} 開始，往回數 {b} 步。',

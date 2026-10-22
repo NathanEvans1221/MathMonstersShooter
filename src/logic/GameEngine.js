@@ -1,3 +1,4 @@
+import { PracticeSession } from './PracticeSession.js';
 import { DIFFICULTIES, normalizeSettings, SCORE_PER_KILL } from './GameSettings.js';
 import { getMathHint } from './MathHints.js';
 import { MathSystem } from './MathSystem.js';
@@ -191,6 +192,8 @@ export class GameEngine {
         if (sessionId !== this.sessionId) return false;
         
         this.settings = normalizeSettings(settings);
+        this.practice = this.settings.sessionType === 'practice' ? new PracticeSession() : null;
+        this.callbacks.onPracticeProgress?.(this.practice ? { completed: 0, total: 10 } : null);
         const { mode, difficulty } = this.settings;
         this.difficulty = DIFFICULTIES[difficulty];
         this.winningScore = this.difficulty.winningScore;
@@ -266,10 +269,12 @@ export class GameEngine {
 
     handleAnswer(value) {
         if (this.state !== 'playing' || this.paused) return;
+        if (this.entityManager.bullets.some(bullet => bullet.alive)) return;
 
         const closestMonster = this.getClosestMonster();
         if (!closestMonster) return;
 
+        this.practice?.answer(value);
         if (closestMonster.answer === value) {
             closestMonster.wrongAttempts = 0;
             this.callbacks.onHint?.(null);
@@ -350,7 +355,7 @@ export class GameEngine {
         this.updateClouds(dt); // 更新背景雲朵
 
         // 0. 勝利判定
-        if (this.score >= this.winningScore) {
+        if (!this.practice && this.score >= this.winningScore) {
             this.gameWin();
             return;
         }
@@ -383,7 +388,7 @@ export class GameEngine {
         const canSpawn = (highestY === Infinity) || (highestY > (-GameEngine.SPAWN_MARGIN + minGap));
 
         // 如果場上怪物少於 3 隻且間隔超過 0.5 秒，強制嘗試生成
-        if (currentCount < GameEngine.FORCE_SPAWN_COUNT && this.spawnTimer > GameEngine.FORCE_SPAWN_TIMER) {
+        if (currentCount < (this.practice ? 1 : GameEngine.FORCE_SPAWN_COUNT) && this.spawnTimer > GameEngine.FORCE_SPAWN_TIMER) {
             if (canSpawn) {
                 this.spawnMonster();
                 this.spawnTimer = 0;
@@ -391,7 +396,7 @@ export class GameEngine {
         }
         // 正常生成間隔，上限 5 隻
         else if (this.spawnTimer > this.spawnInterval) {
-            if (currentCount < 5 && canSpawn) {
+            if (currentCount < (this.practice ? 1 : 5) && canSpawn) {
                 this.spawnMonster();
                 this.spawnTimer = 0;
             }
@@ -426,11 +431,13 @@ export class GameEngine {
         if (escapedCount && escapedCount > 0) {
             for (let i = 0; i < escapedCount; i++) {
                 SoundManager.wrong();
-                this.lives--;
+                if (!this.practice) this.lives = Math.max(0, this.lives - 1);
+                this.finishPracticeQuestion('escaped');
             }
             this.callbacks.onLives(this.lives);
             this.callbacks.onWrongAnswer();
-            if (this.lives <= 0) this.gameOver();
+            if (this.state !== 'playing') return;
+            if (this.lives <= 0) { this.gameOver(); return; }
 
             this.updateOptions();
         }
@@ -446,7 +453,9 @@ export class GameEngine {
      * 生成一隻新怪物
      */
     spawnMonster() {
+        if (this.practice && (this.practice.current || this.practice.complete)) return;
         const problem = this.mathSystem.generateProblem();
+        this.practice?.begin(problem);
 
         // 使用快取的字體大小計算安全的 X 座標
         this.ctx.font = `bold ${this.fontSize}px "Arial Rounded MT Bold", "ZhuyinFont", sans-serif`;
@@ -522,6 +531,8 @@ export class GameEngine {
                     this.score += SCORE_PER_KILL;
                     this.callbacks.onScore(this.score);
                     this.callbacks.onCorrectAnswer && this.callbacks.onCorrectAnswer();
+                    this.finishPracticeQuestion('hit');
+                    if (this.state !== 'playing') return;
                 }
             }
         }
@@ -530,6 +541,12 @@ export class GameEngine {
     /**
      * 遊戲失敗處理
      */
+    finishPracticeQuestion(outcome) {
+        if (!this.practice?.finish(outcome)) return;
+        this.callbacks.onPracticeProgress?.({ completed: this.practice.records.length, total: 10 });
+        if (this.practice.complete) this.gameWin();
+    }
+
     gameOver() {
         this.cancelFrame();
         this.state = 'gameover';
@@ -547,7 +564,9 @@ export class GameEngine {
         // 先顯示勝利畫面
         if (this.victoryTimer) clearTimeout(this.victoryTimer);
         this.victoryTimer = null;
-        this.callbacks.onGameOver(this.score, true);
+        SoundManager.stopBGM();
+        if (this.practice) this.callbacks.onGameOver(this.score, true, this.practice.summary());
+        else this.callbacks.onGameOver(this.score, true);
         
         // 延遲 1 秒後播放勝利音樂
         const sessionId = this.sessionId;

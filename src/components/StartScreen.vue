@@ -1,7 +1,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { TTSManager } from '../logic/TTSManager.js'
-import { computed, toRef } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import { DIFFICULTIES } from '../logic/GameSettings.js'
 import { preferences } from '../logic/Preferences.js'
 
@@ -21,6 +21,7 @@ const version = __APP_VERSION__ // 從 Vite 配置中注入的應用程式版本
 
 const selectedMode = toRef(preferences, 'mode')
 const difficultyInfo = computed(() => DIFFICULTIES[selectedDifficulty.value])
+const selectedSession = ref('arcade')
 const selectedDifficulty = toRef(preferences, 'difficulty') // default to medium (350) based on PRD
 
 /**
@@ -51,6 +52,7 @@ const selectDifficulty = (diff) => {
 
 const onStart = () => {
     emit('start', {
+        sessionType: selectedSession.value,
         mode: selectedMode.value,
         difficulty: selectedDifficulty.value
     })
@@ -70,6 +72,15 @@ const onStart = () => {
 
     <p v-if="highScore > 0" class="high-score">{{ $t('high_score') }} {{ highScore }}</p>
 
+    <div class="selection-group">
+        <div class="label">{{ t('session_type') }}</div>
+        <div class="buttons">
+            <button v-for="kind in ['arcade', 'practice']" :key="kind"
+                :class="{ active: selectedSession === kind }" @click="selectedSession = kind">
+                {{ t(`sessions.${kind}`) }}
+            </button>
+        </div>
+    </div>
     <div class="selection-group">
         <div class="label">{{ $t('mode') }}</div>
         <div class="buttons">
@@ -98,7 +109,10 @@ const onStart = () => {
         </div>
     </div>
 
-    <p class="difficulty-summary">{{ t('difficulty_summary', difficultyInfo) }}</p>
+    <p v-if="selectedSession === 'arcade'" class="difficulty-summary">
+        {{ t('difficulty_summary', difficultyInfo) }}
+    </p>
+    <p v-else class="difficulty-summary">{{ t('practice_description') }}</p>
     <button class="neon-button start-btn" @click="onStart">{{ $t('start') }}</button>
     <div class="version">v{{ version }}</div>
   </div>
