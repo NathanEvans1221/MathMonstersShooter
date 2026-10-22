@@ -49,6 +49,7 @@ export class GameEngine {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.callbacks = callbacks;
+        this.textWidths = new Map();
         this.frameId = null;
         this.sessionId = 0;
 
@@ -162,6 +163,7 @@ export class GameEngine {
      * @param {number} h - 新高度
      */
     resize(w, h) {
+        this.invalidateTextMetrics();
         this.width = w;
         this.height = h;
         this.canvas.width = w;
@@ -212,6 +214,9 @@ export class GameEngine {
         this.entityManager.reset();
         this.spawnTimer = 0;
         this.targetMonster = null;
+        this.optionsTarget = null;
+        this.optionsKey = '';
+        this.invalidateTextMetrics();
         this.hintTarget = null;
         this.callbacks.onHint?.(null);
         this.paused = false;
@@ -459,7 +464,7 @@ export class GameEngine {
 
         // 使用快取的字體大小計算安全的 X 座標
         this.ctx.font = `bold ${this.fontSize}px "Arial Rounded MT Bold", "ZhuyinFont", sans-serif`;
-        const textW = this.ctx.measureText(problem.equation).width;
+        const textW = this.measureEquation(problem.equation);
 
         const minX = textW / 2 + 20; // 20px 邊距
         const maxX = this.width - textW / 2 - 20;
@@ -510,6 +515,10 @@ export class GameEngine {
             if (this.targetMonster) this.targetMonster.wrongAttempts = 0;
             this.callbacks.onHint?.(null);
         }
+        const optionsKey = this.targetMonster?.options.join(',') || '';
+        if (this.optionsTarget === this.targetMonster && this.optionsKey === optionsKey) return;
+        this.optionsTarget = this.targetMonster;
+        this.optionsKey = optionsKey;
         if (this.targetMonster) {
             this.callbacks.onOptions(this.targetMonster.options);
         } else {
@@ -536,6 +545,18 @@ export class GameEngine {
                 }
             }
         }
+    }
+
+    invalidateTextMetrics() {
+        this.textWidths.clear();
+    }
+
+    measureEquation(equation) {
+        const key = `${this.ctx.font}:${equation}`;
+        if (!this.textWidths.has(key)) {
+            this.textWidths.set(key, this.ctx.measureText(equation).width);
+        }
+        return this.textWidths.get(key);
     }
 
     /**
@@ -652,7 +673,7 @@ export class GameEngine {
             const textOffsetY = 25; // 文字向下偏移量
             if (m.scale > 0.8) {
                 // 為算式增加背景半透明圓角框，確保在任何背景顏色下都清晰
-                const textW = this.ctx.measureText(m.equation).width;
+                const textW = this.measureEquation(m.equation);
                 const textH = 26;
                 const padding = 10;
 
@@ -682,7 +703,7 @@ export class GameEngine {
 
             // 繪製瞄準提示 (下方的紅色橫線)
             if (m === this.targetMonster) {
-                const textW = this.ctx.measureText(m.equation).width;
+                const textW = this.measureEquation(m.equation);
                 const lineY = m.y + textOffsetY + (this.fontSize * 0.6);
 
                 this.ctx.strokeStyle = '#FF3366';
@@ -708,7 +729,7 @@ export class GameEngine {
             this.ctx.globalAlpha = pt.life;
             this.ctx.fillStyle = pt.color;
             this.ctx.beginPath();
-            this.ctx.arc(pt.x, pt.y, Math.random() * 3 + 1, 0, Math.PI * 2);
+            this.ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
             this.ctx.fill();
             this.ctx.globalAlpha = 1.0;
         }

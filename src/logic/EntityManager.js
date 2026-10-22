@@ -86,6 +86,7 @@ export class EntityManager {
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
                 life: 1.0,
+                radius: Math.random() * 3 + 1,
                 decay: Math.random() * EntityManager.PARTICLE_DECAY_RANGE + EntityManager.PARTICLE_DECAY_MIN,
                 color: color || '#FFA500'
             });

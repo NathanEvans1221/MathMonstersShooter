@@ -6,6 +6,10 @@ const emit = defineEmits(['score', 'lives', 'gameover', 'options', 'wrong', 'cor
 const canvasRef = ref(null)
 let engine = null
 let resizeObserver = null
+const onFontsChanged = () => {
+    engine?.invalidateTextMetrics()
+    engine?.draw()
+}
 
 onMounted(() => {
     engine = new GameEngine(canvasRef.value, {
@@ -23,9 +27,12 @@ onMounted(() => {
     resize()
     resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(canvasRef.value)
+    document.fonts?.addEventListener('loadingdone', onFontsChanged)
+    document.fonts?.ready.then(onFontsChanged)
 })
 onUnmounted(() => {
     resizeObserver?.disconnect()
+    document.fonts?.removeEventListener('loadingdone', onFontsChanged)
     engine?.stop()
     engine = null
 })
