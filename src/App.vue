@@ -31,16 +31,14 @@ const speak = (key) => {
 /**
  * 開始或重新開始遊戲
  */
-const startGame = (settings) => {
-    gameState.value = 'playing'
+const startGame = async (settings) => {
+    gameState.value = 'loading'
     score.value = 0
     lives.value = 3
     currentOptions.value = []
-    
-    // 延遲一點點確保 DOM 已渲染，然後重置遊戲引擎
-    setTimeout(() => {
-        if(gameCanvas.value) gameCanvas.value.restartGame(settings)
-    }, 50)
+    isWin.value = false
+    isNewRecord.value = false
+    if (await gameCanvas.value.restartGame(settings)) gameState.value = 'playing'
 }
 
 // --- 事件處理常式 ---
@@ -62,14 +60,9 @@ const onResumeClick = () => {
 const onExitClick = () => {
     speak('exit')
     gameState.value = 'start'
-    
-    // 停止當前背景音樂並重置，確保下次重新開始時音樂正確
-    SoundManager.stopBGM()
-    
-    // 返回主畫面後恢復播放背景音樂
-    setTimeout(() => {
-        SoundManager.playBGM()
-    }, 100)
+
+    gameCanvas.value?.stop()
+    SoundManager.playBGM()
 }
 
 const onRetryClick = () => {
@@ -83,7 +76,7 @@ const onRetryClick = () => {
  */
 const handleInteraction = () => {
     if (typeof SoundManager === 'undefined') return;
-    
+
     SoundManager.init();
     if (SoundManager.ctx && SoundManager.ctx.state === 'suspended' && !SoundManager.muted) {
         SoundManager.ctx.resume();
@@ -97,7 +90,7 @@ const handleInteraction = () => {
 // 組件掛載與卸載時管理事件監聽
 onMounted(() => {
     document.addEventListener('click', handleInteraction);
-    
+
     // 載入最高分數
     const saved = localStorage.getItem('mathMonstersHighScore')
     if (saved) highScore.value = parseInt(saved, 10)
@@ -122,7 +115,7 @@ const onGameOver = (finalScore, winStatus = false) => {
     score.value = finalScore
     isWin.value = winStatus
     gameState.value = 'gameover'
-    
+
     // 檢查並更新最高分數
     if (finalScore > highScore.value) {
         highScore.value = finalScore
@@ -131,7 +124,7 @@ const onGameOver = (finalScore, winStatus = false) => {
     } else {
         isNewRecord.value = false
     }
-    
+
     // 語音宣告結果
     if (winStatus) {
         TTSManager.speak(t('you_win'), locale.value)
@@ -171,7 +164,7 @@ const onCorrect = () => {
     // 隨機讚美語句
     const praises = ['好棒', '讚', '真厲害', '完美', '一百分'];
     const randomPraise = praises[Math.floor(Math.random() * praises.length)];
-    
+
     if (locale.value === 'zh') {
         TTSManager.speak(randomPraise, 'zh');
     } else {
@@ -204,9 +197,9 @@ const resumeGame = () => {
 
 <template>
   <div id="app-container">
-    <GameCanvas 
+    <GameCanvas
         ref="gameCanvas"
-        :active="gameState === 'playing'"
+
         @score="onScore"
         @lives="onLives"
         @options="onOptions"
@@ -214,9 +207,9 @@ const resumeGame = () => {
         @wrong="onWrong"
         @correct="onCorrect"
     />
-    
-    <StartScreen v-if="gameState === 'start'" :high-score="highScore" @start="onStartClick" />
-    
+
+    <p v-if="gameState === 'loading'" class="loading" role="status">{{ t('loading') }}</p><StartScreen v-if="gameState === 'start'" :high-score="highScore" @start="onStartClick" />
+
     <div v-if="gameState === 'playing'">
         <GameHUD :score="score" :lives="lives" @pause="onPause" />
         <AnswerPanel :options="currentOptions" @answer="handleAnswer" />
@@ -301,12 +294,12 @@ const resumeGame = () => {
 }
 
 @keyframes winPulse {
-    0%, 100% { 
-        transform: scale(1); 
+    0%, 100% {
+        transform: scale(1);
         text-shadow: 0 0 30px #00ff99;
     }
-    50% { 
-        transform: scale(1.1); 
+    50% {
+        transform: scale(1.1);
         text-shadow: 0 0 60px #00ff99, 0 0 100px #00ff99;
     }
 }

@@ -51,6 +51,8 @@ export class GameEngine {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.callbacks = callbacks;
+        this.frameId = null;
+        this.sessionId = 0;
 
         this.mathSystem = new MathSystem();
         this.entityManager = new EntityManager();
@@ -105,6 +107,9 @@ export class GameEngine {
      * @returns {Promise} 圖片載入完成後 resolve
      */
     preloadImages() {
+        if ([this.playerImage, this.monsterImage].every(img => img.complete)) {
+            return Promise.resolve();
+        }
         return new Promise((resolve) => {
             const images = [this.playerImage, this.monsterImage];
             let loadedCount = 0;
@@ -117,7 +122,7 @@ export class GameEngine {
             };
             
             images.forEach(img => {
-                if (img.complete && img.naturalWidth !== 0) {
+                if (img.complete) {
                     checkComplete();
                 } else {
                     img.onload = checkComplete;
@@ -141,13 +146,15 @@ export class GameEngine {
      * @param {boolean} val - 是否暫停
      */
     setPaused(val) {
+        if (this.state !== 'playing' || this.paused === val) return;
         this.paused = val;
         if (val) {
+            this.cancelFrame();
             SoundManager.pauseBGM();
         } else {
             SoundManager.resumeBGM();
             this.lastTime = performance.now();
-            requestAnimationFrame(this.loop);
+            this.scheduleFrame();
         }
     }
 
@@ -179,10 +186,15 @@ export class GameEngine {
      * 開始新遊戲
      * @param {Object} settings - 包含 mode 與 difficulty
      */
-    async start(settings = {}) {
+    async start(settings = this.settings || {}) {
+        this.stop();
+        const sessionId = this.sessionId;
+        this.state = 'loading';
         await this.preloadImages();
+        if (sessionId !== this.sessionId) return false;
         
         const { mode = 'add', difficulty = 'medium' } = settings;
+        this.settings = { mode, difficulty };
 
         switch (difficulty) {
             case 'easy': this.winningScore = GameEngine.WINS_SCORE_EASY; break;
@@ -193,6 +205,7 @@ export class GameEngine {
 
         this.mathSystem.setMode(mode);
         if (this.victoryTimer) clearTimeout(this.victoryTimer);
+        this.victoryTimer = null;
         this.score = 0;
         this.bulletRadius = GameEngine.BULLET_BASE_RADIUS;
         this.lives = 3;
@@ -202,6 +215,8 @@ export class GameEngine {
         this.levelUpRestTimer = 0;
         this.consecutiveWrong = 0;
         this.entityManager.reset();
+        this.spawnTimer = 0;
+        this.targetMonster = null;
         this.paused = false;
         this.state = 'playing';
 
@@ -217,26 +232,25 @@ export class GameEngine {
         SoundManager.playBGM(); // 開始播放背景音樂
 
         this.lastTime = performance.now();
-        requestAnimationFrame(this.loop);
+        this.scheduleFrame();
+        return true;
     }
 
     /**
      * 恢復遊戲
      */
     resume() {
-        if (this.state !== 'playing' || this.paused) {
-            this.state = 'playing';
-            this.paused = false;
-            this.lastTime = performance.now();
-            requestAnimationFrame(this.loop);
-        }
+        this.setPaused(false);
     }
 
     /**
      * 停止遊戲
      */
     stop() {
+        this.sessionId++;
+        this.cancelFrame();
         if (this.victoryTimer) clearTimeout(this.victoryTimer);
+        this.victoryTimer = null;
         this.state = 'idle';
         SoundManager.stopBGM();
     }
@@ -245,6 +259,17 @@ export class GameEngine {
      * 處理玩家輸入的答案
      * @param {number} value - 選取的答案數值
      */
+    scheduleFrame() {
+        if (this.frameId === null && this.state === 'playing' && !this.paused) {
+            this.frameId = requestAnimationFrame(this.loop);
+        }
+    }
+
+    cancelFrame() {
+        if (this.frameId !== null) cancelAnimationFrame(this.frameId);
+        this.frameId = null;
+    }
+
     handleAnswer(value) {
         if (this.state !== 'playing' || this.paused) return;
 
@@ -300,6 +325,7 @@ export class GameEngine {
      * 遊戲主迴圈
      */
     loop(timestamp) {
+        this.frameId = null;
         if (this.state !== 'playing') return;
         if (this.paused) return;
 
@@ -313,7 +339,7 @@ export class GameEngine {
         this.update(safeDt);
         this.draw();
 
-        requestAnimationFrame(this.loop);
+        this.scheduleFrame();
     }
 
     /**
@@ -500,6 +526,7 @@ export class GameEngine {
      * 遊戲失敗處理
      */
     gameOver() {
+        this.cancelFrame();
         this.state = 'gameover';
         SoundManager.stopBGM();
         this.callbacks.onGameOver(this.score, false);
@@ -509,15 +536,19 @@ export class GameEngine {
      * 遊戲勝利處理
      */
     gameWin() {
+        this.cancelFrame();
         this.state = 'gamewin';
         
         // 先顯示勝利畫面
         if (this.victoryTimer) clearTimeout(this.victoryTimer);
+        this.victoryTimer = null;
         this.callbacks.onGameOver(this.score, true);
         
         // 延遲 1 秒後播放勝利音樂
-        setTimeout(() => {
-            SoundManager.playVictoryBGM();
+        const sessionId = this.sessionId;
+        this.victoryTimer = setTimeout(() => {
+            this.victoryTimer = null;
+            if (this.sessionId === sessionId && this.state === 'gamewin') SoundManager.playVictoryBGM();
         }, GameEngine.VICTORY_BGM_DELAY);
     }
 
